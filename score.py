@@ -1,91 +1,136 @@
-"""Score findings against the answer keys.
+"""Score findings by RUNNING their reproductions.
 
-Stage 1 is automatic and kills most findings for free: a finding whose file is
-not in the key cannot be the catalogued bug.
+The rules live in SCORING.md and were written before any batch ran. In short:
+a finding is real if its reproduction script fails on the instance, and that
+question is settled by executing it rather than by anybody's opinion.
 
-Stage 2 is NOT automated on purpose. Whether a described trigger would actually
-produce the catalogued failure is a judgement, and an automatic guess there
-would quietly invent a catch rate. Survivors are written out for a human (or
-Claude) to rule on.
+Two numbers, kept apart on purpose:
+  catch rate        - did it find the bug the dataset catalogued (low, expected)
+  confirmation rate - are the things it reports actually real (the useful one)
+
+A finding that is CONFIRMED but not CATALOGUED is a success, not a miss.
 
 Usage:  python score.py
 """
-import json
+import json, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
-KEYS, RESULTS, REPORTS = ROOT / "keys", ROOT / "results", ROOT / "reports"
+KEYS, INSTANCES, RESULTS, REPORTS = (ROOT / "keys", ROOT / "instances",
+                                     ROOT / "results", ROOT / "reports")
+REPRO_TIMEOUT = 120
 
 
 def norm(p):
     return str(p).replace("\\", "/").lstrip("./").lower()
 
 
+def run_reproduction(instance_dir, script, tag):
+    """Run one reproduction inside its instance. Returns (verdict, detail).
+
+    CONFIRMED   - it failed, which is what a real defect does
+    UNCONFIRMED - it ran and did not fail
+    MALFORMED   - it could not be run at all
+    """
+    if not script or len(script.strip()) < 20:
+        return "MALFORMED", "no reproduction supplied"
+    py = instance_dir / ".python" / "python.exe"
+    if not py.exists():
+        return "MALFORMED", "instance has no interpreter"
+
+    path = instance_dir / f"_repro_{tag}.py"
+    try:
+        path.write_text(script, encoding="utf-8")
+    except OSError as e:
+        return "MALFORMED", f"could not write script: {e}"
+
+    try:
+        p = subprocess.run([str(py), path.name], cwd=str(instance_dir),
+                           capture_output=True, text=True, errors="replace",
+                           stdin=subprocess.DEVNULL, timeout=REPRO_TIMEOUT)
+        out = (p.stdout or "") + (p.stderr or "")
+        if p.returncode == 0:
+            return "UNCONFIRMED", "ran without failing"
+        # a script that dies before reaching the code under test proves nothing
+        if "SyntaxError" in out or "IndentationError" in out:
+            return "MALFORMED", "script does not parse"
+        first = next((l.strip() for l in reversed(out.splitlines())
+                      if l.strip()), "")
+        if "ModuleNotFoundError" in out and "import" in out.split("\n")[0].lower():
+            return "MALFORMED", first[:200]
+        return "CONFIRMED", first[:200]
+    except subprocess.TimeoutExpired:
+        return "MALFORMED", f"timed out after {REPRO_TIMEOUT}s"
+    finally:
+        path.unlink(missing_ok=True)
+
+
 def main():
     REPORTS.mkdir(exist_ok=True)
     keys = {k["instance"]: k for k in
             (json.loads(p.read_text(encoding="utf-8")) for p in KEYS.glob("*.json"))
-            if k.get("status") == "VALID"}
+            if k.get("status") == "VALID" and not k.get("built_at_fixed_commit")}
 
-    rows, judge, totals = [], [], {"instances": 0, "findings": 0, "needs": 0}
+    tally = {"CONFIRMED": 0, "UNCONFIRMED": 0, "MALFORMED": 0}
+    instances_run = 0
+    instances_caught = 0
+    rows, detail = [], []
+
     for name, key in sorted(keys.items()):
         res = RESULTS / name / "result.json"
         if not res.exists():
             continue
-        totals["instances"] += 1
-        data = json.loads(res.read_text(encoding="utf-8"))
-        findings = data.get("findings", [])
-        totals["findings"] += len(findings)
-        key_files = {norm(f) for f in key.get("files", [])}
+        instances_run += 1
+        findings = json.loads(res.read_text(encoding="utf-8")).get("findings", [])
+        key_files = {norm(f) for f in key.get("files", []) if f}
+        caught = False
 
-        hits_possible = 0
         for i, f in enumerate(findings, 1):
+            verdict, why = run_reproduction(INSTANCES / name,
+                                            f.get("reproduction", ""), i)
+            tally[verdict] += 1
             ff = norm(f.get("file", ""))
-            match = any(ff.endswith(kf) or kf.endswith(ff) for kf in key_files if kf)
-            if match:
-                hits_possible += 1
-                totals["needs"] += 1
-                judge.append({"instance": name, "finding_no": i, "finding": f,
-                              "key_files": sorted(key_files),
-                              "key_lines": key.get("lines", []),
-                              "key_description": key.get("description", "")[:600],
-                              "verdict": "NEEDS_JUDGEMENT"})
-        rows.append((name, len(findings), hits_possible,
-                     sorted(key_files), data.get("what_examined", "")[:200]))
+            right_file = any(ff.endswith(kf) or kf.endswith(ff)
+                             for kf in key_files)
+            catalogued = verdict == "CONFIRMED" and right_file
+            if catalogued:
+                caught = True
+            detail.append({"instance": name, "finding_no": i,
+                           "file": f.get("file"), "line": f.get("line"),
+                           "claim": f.get("what_goes_wrong", "")[:200],
+                           "verdict": verdict, "why": why,
+                           "right_file": right_file,
+                           "catalogued_candidate": catalogued})
+            print(f"  {name} #{i}: {verdict}"
+                  + ("  [right file]" if right_file else ""))
+        if caught:
+            instances_caught += 1
+        rows.append((name, len(findings), caught))
 
-    (REPORTS / "needs_judgement.json").write_text(
-        json.dumps(judge, indent=2), encoding="utf-8")
-
-    out = ["# Scores", "",
-           f"Instances scored: {totals['instances']}  |  "
-           f"Findings reported: {totals['findings']}  |  "
-           f"Reached stage 2: {totals['needs']}", "",
-           "**Catch rate and false-alarm rate are NOT computed here.** Stage 2 is a",
-           "judgement call and guessing it would invent a number. Rule on the entries",
-           "in `reports/needs_judgement.json`, then fill these in:", "",
-           "- Catch rate = hits / instances scored",
-           "- False-alarm rate = false alarms / findings reported",
-           "- Unknowns = real defects that are not the catalogued one "
-           "(**never folded into either number**)", "",
-           "## Per instance", "",
-           "| Instance | Findings | Reached stage 2 | Key file(s) |",
-           "|---|---|---|---|"]
-    for name, n, hp, kf, _ in rows:
-        out.append(f"| {name} | {n} | {hp} | {', '.join(kf)} |")
-
-    out += ["", "## What each run said it examined", ""]
-    for name, _, _, _, examined in rows:
-        out.append(f"- **{name}** — {examined}")
-
-    out += ["", "## Reminder", "",
-            "Four hand runs on PySnooper produced six verified real defects and a",
-            "catch rate of 0%. BugsInPy catalogues one bug per instance, so a finding",
-            "outside the key is UNKNOWN, not wrong. If unknowns keep outnumbering",
-            "hits, the ruler is wrong rather than the system."]
+    total = sum(tally.values())
+    pct = lambda n, d: f"{100*n/d:.0f}%" if d else "n/a"
+    out = [
+        "# Scores", "",
+        "Rules: `SCORING.md`. Every finding below was scored by **running its",
+        "reproduction**, not by reading it.", "",
+        f"- **Catch rate: {pct(instances_caught, instances_run)}** "
+        f"({instances_caught} of {instances_run} instances) — found the bug the",
+        "  dataset catalogued. Low is expected; the dataset records one bug per",
+        "  project.",
+        f"- **Confirmation rate: {pct(tally['CONFIRMED'], total)}** "
+        f"({tally['CONFIRMED']} of {total} findings) — reproductions that",
+        "  actually failed. This is the quality measure.",
+        f"- **Noise rate: {pct(tally['UNCONFIRMED'] + tally['MALFORMED'], total)}** "
+        f"({tally['UNCONFIRMED']} unconfirmed, {tally['MALFORMED']} malformed).",
+        "", "## Per instance", "",
+        "| Instance | Findings | Caught the catalogued bug |", "|---|---|---|"]
+    for name, n, caught in rows:
+        out.append(f"| {name} | {n} | {'yes' if caught else 'no'} |")
     (REPORTS / "scores.md").write_text("\n".join(out) + "\n", encoding="utf-8")
-    print(f"{totals['instances']} instances, {totals['findings']} findings, "
-          f"{totals['needs']} need judgement.")
-    print("-> reports/scores.md and reports/needs_judgement.json")
+    (REPORTS / "verdicts.json").write_text(json.dumps(detail, indent=2),
+                                           encoding="utf-8")
+    print("\n".join(out[3:12]))
+    print("\n-> reports/scores.md and reports/verdicts.json")
 
 
 if __name__ == "__main__":

@@ -30,8 +30,10 @@ instances/
 src/
 
 # --- scoring output derived from the answer keys ---
-# score.py copies key_files, key_lines and the bug patch text into these, so
-# they leak the answers even though keys/ itself is excluded.
-# reports/rejections.md and reports/build.log are clean and stay tracked.
+# verdicts.json records, per finding, whether it named the file the bug is in.
+# That points straight at the answer, so it stays out.
+# reports/scores.md is now aggregate numbers plus a yes/no per instance - it is
+# the result, not the answer - so it IS tracked: SCORING.md requires the numbers
+# to live in this repo rather than in a sheet somewhere else.
+reports/verdicts.json
 reports/needs_judgement.json
-reports/scores.md

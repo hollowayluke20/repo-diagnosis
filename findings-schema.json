@@ -10,7 +10,8 @@
         "type": "object",
         "additionalProperties": false,
         "required": ["file", "line", "what_goes_wrong", "trigger", "expected",
-                     "actual", "confidence", "verified_by_running"],
+                     "actual", "confidence", "verified_by_running",
+                     "reproduction"],
         "properties": {
           "file": {"type": "string"},
           "line": {"type": "integer"},
@@ -19,7 +20,12 @@
           "expected": {"type": "string"},
           "actual": {"type": "string"},
           "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-          "verified_by_running": {"type": "boolean"}
+          "verified_by_running": {"type": "boolean"},
+          "reproduction": {
+            "type": "string",
+            "minLength": 20,
+            "description": "A self-contained Python script that demonstrates this defect. Run from the repository root with the project importable, it must FAIL (raise, or exit non-zero) because of this defect, and would stop failing if the defect were fixed. No pytest, no fixtures, no command-line arguments. Do not swallow the error - let it surface. This is how the finding is scored: it is executed, and a finding whose script does not fail is not counted."
+          }
         }
       }
     },

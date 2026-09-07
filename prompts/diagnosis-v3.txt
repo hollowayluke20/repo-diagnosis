@@ -15,8 +15,8 @@ You may run the project's own test suite, and you may write and run your own
 throwaway scripts to test a hypothesis. Do not add anything to the project's own
 test files.
 
-Examine the code and report any defects you find. **It is entirely possible that
-there are none.** If you find nothing you are genuinely confident about, say so —
+Examine the code and report any defects you find. It is entirely possible that
+there are none. If you find nothing you are genuinely confident about, say so —
 reporting nothing is a valid answer and is sometimes the correct one.
 
 Rules
@@ -37,8 +37,8 @@ Examine three things, not one.
    if a caller passes something valid but unusual?
 3. The content of the data — separately from its type, what is inside it?
    What did the author assume about the actual values: their size, range, format
-   and origin? Pay particular attention to hardcoded defaults and constants — **a
-   default is an assumption written down.** Ask what happens when the real data
+   and origin? Pay particular attention to hardcoded defaults and constants — a
+   default is an assumption written down. Ask what happens when the real data
    does not match it.
 
 Code can be structurally correct, receive exactly the type it expected, and still
@@ -65,5 +65,20 @@ For each one, give exactly:
 6. Verified? — say whether you actually ran something that demonstrated it,
    or whether this is from reading alone.
 
-Then one final line, separately: **what you examined, and how you decided where
-to look.**
+7. Reproduction — a short, self-contained Python script that demonstrates
+   this defect.
+
+About the reproduction, because it is how your finding is scored:
+
+- It is RUN. A finding whose script does not fail is not counted, however well
+  argued it is.
+- It must FAIL on this code — raise an exception, or exit non-zero — and it
+  must fail BECAUSE OF THIS DEFECT. If the defect were fixed, it would pass.
+- It runs from the repository root, with the project importable. Plain Python
+  only: no pytest, no fixtures, no command-line arguments, no test framework.
+- Do not catch and print the error. Let it surface, so the failure is real.
+- Do not fabricate one. If you cannot demonstrate a finding, leave it out.
+  Reporting three findings you can demonstrate beats five you cannot.
+
+Then one final line, separately: what you examined, and how you decided where
+to look.
