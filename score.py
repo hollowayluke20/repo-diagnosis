@@ -21,8 +21,49 @@ KEYS, INSTANCES, RESULTS, REPORTS = (ROOT / "keys", ROOT / "instances",
 REPRO_TIMEOUT = 120
 
 
+NEAR = 15  # lines either side of a patched hunk that still count as "here"
+
+
 def norm(p):
     return str(p).replace("\\", "/").lstrip("./").lower()
+
+
+def patched_regions(project, bug_id):
+    """Which lines the real fix actually touched, per file.
+
+    Matching on filename alone is not a catch - SCORING.md says so explicitly,
+    and scoring it that way turned a 1-of-3 into a 100% that was fiction. A
+    finding counts only if it lands where the fix landed.
+    """
+    import re
+    p = (ROOT / "BugsInPy" / "projects" / project / "bugs" / bug_id
+         / "bug_patch.txt")
+    if not p.exists():
+        return {}
+    regions, current = {}, None
+    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        m = re.match(r"^\+\+\+ b?/?(\S+)", line)
+        if m and m.group(1) != "/dev/null":
+            current = norm(m.group(1))
+            regions.setdefault(current, [])
+            continue
+        m = re.match(r"^@@ -(\d+)(?:,(\d+))?", line)
+        if m and current:
+            start = int(m.group(1))
+            length = int(m.group(2) or 1)
+            regions[current].append((start, start + length))
+    return regions
+
+
+def is_catalogued(regions, file, line):
+    f = norm(file)
+    for kf, spans in regions.items():
+        if not (f.endswith(kf) or kf.endswith(f)):
+            continue
+        for lo, hi in spans:
+            if lo - NEAR <= (line or -999) <= hi + NEAR:
+                return True
+    return False
 
 
 def run_reproduction(instance_dir, script, tag):
@@ -83,6 +124,7 @@ def main():
         instances_run += 1
         findings = json.loads(res.read_text(encoding="utf-8")).get("findings", [])
         key_files = {norm(f) for f in key.get("files", []) if f}
+        regions = patched_regions(key["project"], key["bug_id"])
         caught = False
 
         for i, f in enumerate(findings, 1):
@@ -92,7 +134,9 @@ def main():
             ff = norm(f.get("file", ""))
             right_file = any(ff.endswith(kf) or kf.endswith(ff)
                              for kf in key_files)
-            catalogued = verdict == "CONFIRMED" and right_file
+            catalogued = (verdict == "CONFIRMED"
+                          and is_catalogued(regions, f.get("file", ""),
+                                            f.get("line")))
             if catalogued:
                 caught = True
             detail.append({"instance": name, "finding_no": i,
@@ -102,7 +146,8 @@ def main():
                            "right_file": right_file,
                            "catalogued_candidate": catalogued})
             print(f"  {name} #{i}: {verdict}"
-                  + ("  [right file]" if right_file else ""))
+                  + ("  [CATALOGUED]" if catalogued
+                     else "  [right file, wrong place]" if right_file else ""))
         if caught:
             instances_caught += 1
         rows.append((name, len(findings), caught))

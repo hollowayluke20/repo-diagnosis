@@ -1,0 +1,3 @@
+black-1
+cookiecutter-1
+fastapi-1
