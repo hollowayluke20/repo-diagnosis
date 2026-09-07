@@ -64,6 +64,13 @@ allowed.
 - **Proof comes before pipeline.** Part 2 is sequenced ahead of Part 3
   deliberately: if "better" cannot be shown without a human, then searching,
   fixing and the database are decoration on an unprovable core.
+- **Diagnose first, then take the wheel.** The six provable checks are what
+  produce the list of problems; Alex's thesis is how each one gets solved. You
+  cannot take a wheel until something tells you which is missing. Expect the
+  first checks to feel mechanical - four of the six (still-runs, installs-
+  cleanly, known holes, docs-mismatch) have fixes that need no searching at
+  all. The searching earns its place on bugs and on speed, and most of all on
+  the "smarter way" bucket that has no proof available.
 - **Scan cheapest-first**: existing tools, then the project's own tests, then
   the AI, then actually breaking it. Anything a linter finds should never cost
   an API call.
