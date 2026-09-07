@@ -188,6 +188,10 @@ def write_entry(part, result):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=20)
+    ap.add_argument("--target", type=int,
+                    help="stop once the library holds this many MINED entries "
+                         "(seeds excluded). Avoids paying for labelling past "
+                         "the number actually wanted.")
     ap.add_argument("--dry-run", action="store_true",
                     help="print one prompt and exit, spending nothing")
     a = ap.parse_args()
@@ -202,7 +206,22 @@ def main():
             continue
         d["_path"] = str(p)
         parts.append(d)
-    parts = parts[:a.limit]
+
+    # Round-robin across projects rather than filename order, which groups by
+    # project: stopping at a target would otherwise take everything from the
+    # alphabetically early repos and nothing from the rest, and a library drawn
+    # from three projects generalises worse than one drawn from twenty.
+    by_project = {}
+    for d in parts:
+        by_project.setdefault(d["project"], []).append(d)
+    interleaved, queues = [], list(by_project.values())
+    while queues:
+        for q in list(queues):
+            if q:
+                interleaved.append(q.pop(0))
+            if not q:
+                queues.remove(q)
+    parts = interleaved[:a.limit]
     if not parts:
         sys.exit("nothing unlabelled in raw-parts/ - run mine_library.py first")
 
@@ -232,6 +251,13 @@ def main():
               if len(parts) > 20 else contextlib.nullcontext())
     with marker:
         for i, part in enumerate(parts, 1):
+            if a.target is not None:
+                mined_now = sum(1 for e in library.load_all()
+                                if e["source_project"] != "SEED")
+                if mined_now >= a.target:
+                    print(f"\nreached the target of {a.target} mined entries; "
+                          f"stopping with {len(parts) - i + 1} parts unlabelled")
+                    break
             print(f"--- {i}/{len(parts)}  {part['id']}: "
                   f"{part['subject'][:60]}", flush=True)
             result, err = label(part, schema_path)
