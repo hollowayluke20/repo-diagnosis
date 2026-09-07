@@ -224,7 +224,30 @@ inside it, so that is what gets measured.
   that works — one small file per entry, in a folder, in git, plain keyword
   search. Only reach for anything cleverer once simple matching can be **shown**
   failing.
-- **OPEN - needs Luke's call:** which projects the miner draws fixes from.
+- **Mining sources: a hand-picked list, outside BugsInPy entirely.** Decided by
+  Luke 2026-09-07, choosing this over the six unused BugsInPy projects. Those
+  six are too few, four are very large ML libraries, and using them would rule
+  them out as future corpus instances. The list starts at 15-30 repositories and
+  is expected to grow to 100-200; it therefore lives in a plain file
+  (`mining-sources.txt`, one repository per line) rather than in code.
+- **The firewall excludes all of BugsInPy, not just the corpus.** Excluding only
+  what is in `MANIFEST.md` today leaves a retroactive hole: build a corpus
+  instance from pandas next month and every pandas fix already in the library
+  becomes an answer key, with nothing to flag it. So the miner refuses any
+  repository matching a project in `MANIFEST.md` *or* present in `BugsInPy/
+  projects/`, read at run time rather than copied into code, and refuses rather
+  than warning.
+- **The firewall is also a standing check**, in the manner of
+  `check_prompt_sync.py`: a committed check that re-scans the library and fails
+  if any entry's source is a corpus or BugsInPy project. Refusing at mine time
+  only catches contamination going in; the check catches it after the fact, when
+  the corpus is what changed.
+- **Mining is free; labelling is not.** Pulling fix commits out of git history
+  costs nothing but disk. Turning a diff into the four-field shape needs a model
+  to read it. That cost scales with the whole library, while the benefit only
+  applies to entries actually retrieved.
+- **OPEN - needs Luke's call:** whether the shape is written for every mined
+  commit up front, or only when an entry is retrieved as a candidate.
 
 ## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
