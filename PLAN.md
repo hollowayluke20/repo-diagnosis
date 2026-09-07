@@ -202,6 +202,31 @@ inside it, so that is what gets measured.
     with evidence attached. This is what makes the system smarter over time.
   - A pattern moves library -> database by being **used and proven** (Stage 7
     proof passed on a real instance), never by being found.
+- **Promotion needs its own broken code, and it cannot be the corpus.** Raised
+  by Luke 2026-09-07: the only repositories with known, proved-reproducible bugs
+  are the corpus, and promoting entries by what works on the corpus, then
+  measuring the database on that same corpus, is the "reusing a test teaches the
+  test" failure from Stage 5 wearing a different hat. So a **third pile** is
+  built - a *workshop pile* - from BugsInPy bugs that are in neither the
+  practice nor the locked set. 493 bugs exist and about 35 are used, so there is
+  ample room. Instances in the workshop pile are **never measured on**, and
+  `manifest.py` records the split so the three cannot be confused.
+  - Note the two bans are different and both hold: mining *from* cookiecutter is
+    banned because cookiecutter's own fix **is** the exam answer. Fixing
+    cookiecutter using a part mined from elsewhere is not an answer leak, it is
+    simply the system doing its job. BugsInPy is therefore barred as a **source
+    of parts** while remaining the right place to **prove** them.
+- **Promotion requires repeated success, not a single one.** Luke's refinement,
+  2026-09-07, adopted over the original "used and proven once": run the fixer
+  across many broken repositories and promote what **keeps** working. One
+  success is indistinguishable from luck or from a coincidental match.
+  Provisional bar: passed Stage 7's proof on **3 different repositories**.
+  - **Retrieval frequency is explicitly not evidence.** "Keeps getting pulled
+    out" measures popularity, and popular junk is exactly what the found/proven
+    split exists to keep off the shelf. Each entry therefore records *times
+    retrieved* and *times it actually worked* separately; only the second
+    promotes. The ratio between them is also the demotion signal - an entry
+    retrieved often and working rarely is a bad match rule, and gets dropped.
 - **An entry is a shape, not a diff.** Follows "take the idea, not the code":
   ideas are not copyrightable, specific code is, and an idea transfers to
   another codebase where a diff does not. Four fields:
@@ -242,12 +267,28 @@ inside it, so that is what gets measured.
   if any entry's source is a corpus or BugsInPy project. Refusing at mine time
   only catches contamination going in; the check catches it after the fact, when
   the corpus is what changed.
-- **Mining is free; labelling is not.** Pulling fix commits out of git history
-  costs nothing but disk. Turning a diff into the four-field shape needs a model
-  to read it. That cost scales with the whole library, while the benefit only
+- **Mining is free; labelling is metered.** Pulling fix commits out of git
+  history costs nothing but disk. Turning a diff into the four-field shape needs
+  a model to read it. Corrected 2026-09-07 after Luke pushed back: that is plan
+  usage, not a cash bill, so the currency is **wall-clock time and plan quota**,
+  not pounds. It still scales with the whole library while the benefit only
   applies to entries actually retrieved.
-- **OPEN - needs Luke's call:** whether the shape is written for every mined
-  commit up front, or only when an entry is retrieved as a candidate.
+- **Measured yield, 2026-09-07** (not estimated): `requests` has 6,494 commits,
+  729 whose message starts "fix", **365** of those touching 1-3 `.py` files.
+  `click`: 3,362 / 497 / **239**. So roughly **300 candidate parts per
+  repository** - about 9,000 at 30 repos, 60,000 at 200. Message noise is heavy
+  and cheap to filter: a sample of 25 held "Fix remaining typos", "Fix typos
+  discovered by codespell", "Fix CI and build failures", "Fix httpbin pin for
+  test suite", alongside genuinely transferable ones like "Fix empty netrc entry
+  usage" and "Fix malformed value parsing for Content-Type". A keyword blocklist
+  (typo, docs, CI, lint, changelog, pin, format) removes roughly a third for
+  free.
+- **The label format is unproven, so it is not committed to at scale.** The
+  four fields are a first guess. Labelling every part before retrieval has been
+  shown to work locks in a format that has never been tested, and relabelling is
+  the whole bill again.
+- **OPEN - needs Luke's call:** whether to label a small batch first to settle
+  the format, or label everything up front.
 
 ## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
