@@ -41,6 +41,16 @@ Two rules about it:
   than finished.** That is useful information on its own, so do not clean up
   stale markers without saying what happened.
 
+## Update PLAN.md when the plan changes, not later
+
+`PLAN.md` is the plan, not a status report. When a decision is made or reversed
+in conversation, write it into `PLAN.md` **in the same sitting**, before moving
+on. Batching plan updates means the file lags behind what has actually been
+agreed, and the daily reviewer reads the file rather than the conversation.
+
+Status belongs in `PROJECT-STATE.md`. Decisions and stages belong in `PLAN.md`.
+Keep them apart.
+
 ## Do not commit answer material
 
 The whole point of this repo is that an AI under test cannot see the answers.
