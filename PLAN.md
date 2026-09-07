@@ -25,132 +25,103 @@ From the brief, all three pointing the same way:
 - **No predefined repository.** It must work on whatever is submitted.
 - **No human guidance after submission.** Fully unattended end to end.
 
-Curating the fix database between runs is *not* guidance during a run, and is
+Curating the fix database between runs is not guidance during a run, and is
 allowed.
 
-## Standing decisions
-
-These are settled and should not be silently reopened.
+## Design decisions taken up front
 
 - **Two roles.** A *Breaker* finds bugs and fragility; an *Auditor* finds
-  inefficiency, dead code and better approaches. **Prototype 1 is the Breaker
-  only** — the Auditor's hardest third has no answer key anywhere, because
-  there is no agreed test for whether something is an improvement.
+  inefficiency, dead code and better approaches. Prototype 1 is the Breaker
+  only — the Auditor's hardest third has no answer key anywhere, because there
+  is no agreed test for whether something is an improvement.
 - **Proof has two halves**: the failure is gone, *and* everything that worked
   before still works. Without the second half, "swallow the error" and "delete
   the feature" both score perfectly.
-- **The success test is written at the moment the break is found**, before any
+- **The success test is written at the moment a break is found**, before any
   searching. A test written after seeing a candidate fix is a test that fix
   passes.
 - **Output separates proven from proposed.** Never claim a proof that does not
   exist.
-- **Security by isolation, not inspection.** Hostile code hides; containment
-  works whether or not you spotted it.
+- **Security by isolation, not inspection.** Hostile code hides on purpose;
+  containment works whether or not you spotted it.
 - **Take the idea, not the code.** Ideas are not copyrightable, specific code
   is. This also solves "the fix does not fit this repo".
 - **Public repositories only in prototype 1.** A privacy promise can be added
   later and never retracted.
-- **Scanning runs cheapest-first**: existing tools, then the project's own
-  tests, then the AI, then actually breaking it. Anything a linter finds should
-  never cost an API call.
+- **Scan cheapest-first**: existing tools, then the project's own tests, then
+  the AI, then actually breaking it. Anything a linter finds should never cost
+  an API call.
 
 ---
 
-# PART 1 — Can it find problems? (measurement)
+# PART 1 — Can it find problems, and can that be measured?
 
-*Scaffolding, not product. Nothing here ships to a user; it exists so the rest
-can be judged rather than guessed at.*
+*Scaffolding, not product. Nothing here ships to a user. It exists so every
+later claim can be judged rather than asserted.*
 
-## Stage 1: Build the exam papers
-Rebuild each project at its buggy commit, strip the history and the giveaway
-test, and refuse any instance whose bug has not been proved to fail.
+## Stage 1: Decide what is being measured, before measuring it
+Define what counts as a correct finding, what counts as a false alarm, and what
+happens to a genuine defect that is not the one being looked for. Set the pass
+mark now, not after seeing a score.
 
-Done when: `build_instances.py` builds an instance and rejects it unless the
-bug's own test is observed to fail.
+Done when: the scoring rules are written down, including a worked example of a
+finding that is real but not the one sought, and how it is counted.
 
-## Stage 2: Sit the exam, safely
-Drive an AI agent over an instance without internet access, and keep the
-held-back instances out of reach unless deliberately unlocked.
+## Stage 2: Build a corpus of real bugs with known answers
+Take bugs from a published dataset, rebuild each project at the moment the bug
+existed, and strip out everything that gives the answer away — the version
+history, and any test added alongside the fix.
 
-Done when: `run_diagnosis.py` runs an agent per instance and refuses to start
-when search is enabled or when held-back instances are targeted without
-explicit confirmation.
+Done when: an instance is only admitted after its bug's own test has been
+observed to fail on it, and an instance built at the fixed commit is rejected.
 
-## Stage 3: Answers in a fixed shape
-Force the agent's report into a defined structure so results can be counted,
-with "I found nothing" a permitted answer.
+## Stage 3: Put an agent in front of it, with the answers out of reach
+Run an AI agent over each instance with no internet access, no session memory
+between runs, and no path to the answer material.
 
-Done when: `findings-schema.json` defines the answer shape, the runner enforces
-it, and an empty result is valid against it.
+Done when: the runner refuses to start with search enabled, refuses to touch
+held-back instances without explicit confirmation, and records the exact prompt
+sent alongside every reply.
 
-## Stage 4: A corpus worth measuring
-Fix the builder's cleanup check that wrongly rejects instances whose bug test
-already existed, and record which instances passed validation.
+## Stage 4: Answers in a countable shape
+Force each report into a defined structure, with a concrete trigger required for
+every finding and "I found nothing" a permitted answer.
 
-Done when: the wrongly-rejecting cleanup check is corrected, and a committed
-manifest lists every validated instance in the corpus.
+Done when: results are machine-readable, a finding without a concrete trigger is
+rejected, and an empty result validates.
 
-## Stage 5: Run the whole batch
-Run every instance in the corpus in one pass and keep the output.
+## Stage 5: A baseline number
+Run the whole corpus in one pass and produce the agreed measure.
 
-Done when: `results/` holds one recorded result per instance in the manifest,
-from a single batch run.
-
-## Stage 6: Produce the two numbers
-Complete the marking so the catch rate and the false-alarm rate are computed
-inside this repo, with the human judgement step recorded here rather than in a
-sheet elsewhere.
-
-Done when: `score.py` outputs a catch rate and a false-alarm rate, and the human
-judgements it depends on are stored in this repo.
-
-## Stage 7: Someone else could run it
-Document the whole route from clone to numbers, and stop the two copies of the
-prompt drifting apart.
-
-Done when: the README documents building the corpus, running the batch and
-scoring it, and a check fails if `prompts/diagnosis-v3.txt` and
-`diagnosis-v3-source.md` disagree.
-
-## Stage 8: Decide whether the ruler is right
-Five hand runs produced nine verified real defects and a catch rate of zero,
-because the dataset catalogues one bug per project and scores everything else
-as a miss. Settle whether diagnosis is judged against the catalogued bug or on
-whether its findings are real and worth fixing.
-
-Done when: the batch numbers from Stage 6 are in, a decision is written down
-with its reasoning, and `score.py` computes whichever measure was chosen.
+Done when: one recorded result exists per instance from a single batch, and the
+measure from Stage 1 is computed inside the repo from those results.
 
 ---
 
-# PART 2 — Can it prove an improvement? (the crux)
+# PART 2 — Can an improvement be proved? *(the crux)*
 
-*This is where the project lives or dies, so it comes before building any more
-pipeline. Everything downstream is worthless if "better" cannot be demonstrated
-without a human.*
+*This decides whether the project is possible. It comes before building any
+pipeline, because everything downstream is decoration if "better" cannot be
+demonstrated without a human.*
 
-## Stage 9: Know what you are holding
+## Stage 6: Know what you are holding
 Before any judgement about a submitted repo, record whether it builds, whether
 it runs, whether it has tests, and whether those tests pass.
 
 Done when: every run emits that record, and the system refuses to report "no
 problems found" for any repo whose record shows it could not run anything.
-*(Three of the first four hand runs were decided by the environment rather than
-the code, and each time the failure looked like a clean result.)*
 
-## Stage 10: Prove a fix is better
+## Stage 7: Prove a fix is better
 Given a repo, a defect and a candidate change, decide whether the repo is
-genuinely better afterwards — the defining failure gone, and nothing else
-broken.
+genuinely better afterwards.
 
 Done when: given a known-buggy instance and its real fix, the proof step reports
-*better*; and given the same instance with a change that merely suppresses the
-symptom (swallowing the error, or deleting the feature), it reports *not
-better*.
+*better* — and given the same instance with a change that merely suppresses the
+symptom, or deletes the feature, it reports *not better*.
 
-## Stage 11: Run a stranger's code safely
-Every submitted repo executes inside a throwaway sealed workspace with no
-network, no access to the host filesystem, and nothing shared between runs.
+## Stage 8: Run a stranger's code safely
+Every submitted repo executes inside a throwaway sealed workspace: no network,
+no access to the host filesystem, nothing shared between runs.
 
 Done when: a deliberately hostile test repo — one that tries to read outside its
 workspace, reach the network, and write to the host — runs to completion with
@@ -160,51 +131,59 @@ all three attempts blocked and logged.
 
 # PART 3 — Can it make the improvement?
 
-## Stage 12: Find how others solved it
+## Stage 9: Break it on purpose
+Generate inputs and conditions the code was never tried against, run them, and
+capture the ones that cause a real failure. This is the strongest diagnosis
+available, and it hands over the proof for free: a break comes with the exact
+input that caused it.
+
+Done when: breaking finds defects the reading-based diagnosis missed, measured
+on the same corpus with the same scoring rules from Stage 1.
+
+## Stage 10: Find how others solved it
 Turn a specific defect into a searchable description, then return candidate
 approaches from open source, products and research, each with a citable source.
 
-Done when: given a defect from the corpus, the search step returns ranked
-candidate approaches with sources, plus a recorded judgement for each of whether
-it transfers to this repo.
+Done when: given a defect from the corpus, the search returns ranked candidate
+approaches with sources, plus a recorded judgement for each of whether it
+transfers to this repo.
 
-## Stage 13: Make the fix
+## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
 written fresh for this codebase.
 
 Done when: for an agreed number of corpus instances, the system produces a
-change that passes Stage 10's proof with no human involvement.
+change that passes Stage 7's proof with no human involvement.
 
-## Stage 14: Hand back a result
-Deliver the improved repository in a form the submitter can actually use.
+## Stage 12: Hand back a result
+Deliver the improved repository in a form the submitter can use.
 
 Done when: a completed run outputs an applicable change set with proven and
-proposed changes separated, every proven change carrying the evidence that
-backs it, and every proposed one carrying the source that inspired it.
+proposed changes separated, every proven change carrying its evidence, and every
+proposed one carrying the source that inspired it.
 
-## Stage 15: Get better with use
-Store the *idea and shape* of each proven fix, indexed by the problem it solved,
-and use it on later repositories.
+## Stage 13: Get better with use
+Store the idea and shape of each proven fix, indexed by the problem it solved,
+and apply it to later repositories.
 
-Done when: running the same repository twice — once with the database enabled
-and once without — produces measurably different output, and that difference is
-recorded. *(Without this check the database can grow to thousands of entries,
-contribute nothing, and look exactly like learning.)*
+Done when: running the same repository twice — once with the database enabled,
+once without — produces measurably different output, and that difference is
+recorded.
 
 ---
 
 # PART 4 — Can anyone use it?
 
-## Stage 16: Public platform
+## Stage 14: Public platform
 A live site where anyone submits a public repository URL and gets a result,
-running nowhere near Luke's laptop.
+running nowhere near a personal laptop.
 
 Done when: a person who is neither Luke nor Alex submits a public repository
 from their own machine and receives a result, with nothing running locally.
 
-## Stage 17: Software discovery interface
-The search side of the brief: a way to find software by the problem it solves,
-built on what the platform has learned.
+## Stage 15: Software discovery interface
+The search half of the brief: find software by the problem it solves, built on
+what the platform has learned.
 
 Done when: Alex can use it without instruction and find a project relevant to a
 problem he describes, that he did not already know about.
@@ -215,15 +194,15 @@ problem he describes, that he did not already know about.
 
 *Deferred deliberately. Neither is needed to demonstrate the thesis.*
 
-## Stage 18: The Auditor
-Dead code and measurable slowness, both of which prove themselves — delete it
-and the tests still pass; time it before and after. "A smarter way to do this"
+## Stage 16: The Auditor
+Dead code and measurable slowness, both of which prove themselves: delete it and
+the tests still pass, or time it before and after. "A smarter way to do this"
 ships as *proposed*, never *proven*.
 
 Done when: the Auditor reports dead code and speed improvements with evidence
 attached, and anything unprovable appears only in the proposed section.
 
-## Stage 19: Private repositories
+## Stage 17: Private repositories
 Accept code that is not already public, with the promises that entails.
 
 Done when: submitted code is provably deleted after a run, and every third party
@@ -231,14 +210,22 @@ it passes through is named on the page before submission.
 
 ---
 
-# Known open questions
+# Open questions
 
-- **Corpus reach.** If most published bug datasets cannot be made to run on a
-  modern machine, that is a hard limit on Part 2 — you cannot prove anything
-  about code you cannot execute.
+Unresolved by design, each with the evidence that would settle it.
+
+- **Corpus reach.** Published bug datasets are several years old, and old code
+  needs old dependencies. If most instances cannot be made to run, that is a
+  hard limit on Part 2 — nothing can be proved about code that cannot be
+  executed. *Settled by: the proportion of the corpus that survives Stage 2.*
 - **Contamination.** Every public dataset may sit inside the models' training
-  data. Bugs fixed after the training cutoff are the only clean measure.
-- **What "two bug-fixing formulas" means** — from an early session, never
-  pinned down. Working assumption: fix from the database vs fix from fresh
-  search.
-- **Where it runs.** Deferred. Needed by Stage 16, not before.
+  data, so a good score may mean the fix was memorised. Bugs fixed after the
+  training cutoff are the only clean measure. *Settled by: comparing scores on
+  well-known versus obscure instances.*
+- **Whether a repo without usable tests can be served at all.** The second half
+  of the proof leans on the repository's own test suite. *Settled by: deciding
+  whether such repos are refused, or served with every claim downgraded to
+  proposed.*
+- **What "finished" means to Alex.** The brief describes a company. Whether it
+  wants a working demonstration of the thesis or the whole thing changes the
+  scope of Parts 3 and 4. *Settled by: asking him.*
