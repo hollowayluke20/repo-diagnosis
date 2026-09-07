@@ -57,6 +57,11 @@ def main():
     ap.add_argument("--locked", action="store_true",
                     help="run the held-back pile. One look spends it.")
     ap.add_argument("--only", help="single instance name")
+    ap.add_argument("--limit", type=int,
+                    help="run at most this many, skipping any already run. "
+                         "Keeps a batch sized to what you want to spend, and "
+                         "still counts as a batch so the IN-PROGRESS marker "
+                         "fires.")
     ap.add_argument("--control", action="store_true",
                     help="run the CONTROL instances: same projects built at the "
                          "commit where the bug was FIXED. Anything it reports "
@@ -80,6 +85,10 @@ def main():
                 and k.get("pile") == pile]
     if a.only:
         todo = [k for k in todo if k["instance"] == a.only]
+    if a.limit:
+        todo = [k for k in todo
+                if not (RESULTS / k["instance"] / "result.json").exists()]
+        todo = todo[:a.limit]
     if not todo:
         sys.exit(f"no instances to run"
                  + (" (build controls with build_instances.py --fixed)"
