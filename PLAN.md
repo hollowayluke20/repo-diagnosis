@@ -42,6 +42,15 @@ allowed.
   passes.
 - **Output separates proven from proposed.** Never claim a proof that does not
   exist.
+- **A change must improve one thing and harm none.** "Harmed nothing" is
+  checkable; "worth it on balance" is a judgement, and judgements are what we
+  are keeping out of the run.
+- **Trade-offs are never applied, only proposed.** A change that improves one
+  measure and worsens another goes into the suggestions with the downside
+  spelled out — "closes a security hole but needs version X, which may break Y".
+  The person who submitted the repo signs it off afterwards. Nobody is
+  interrupted mid-run, so this does not break "no human guidance after
+  submission".
 - **Security by isolation, not inspection.** Hostile code hides on purpose;
   containment works whether or not you spotted it.
 - **Take the idea, not the code.** Ideas are not copyrightable, specific code
@@ -99,6 +108,11 @@ rejected, and an empty result validates.
 
 ## Stage 5: A baseline number
 Run the whole corpus in one pass and produce the agreed measure.
+
+Tuning uses **fresh instances each round** — roughly ten, adjust, then ten it has
+never seen — rather than re-running the same set until the number rises. Reusing
+a test teaches the test. The dataset holds 493 bugs and about 35 have been used,
+so there is room for this.
 
 Done when: one recorded result exists per instance from a single batch, the
 measure from Stage 1 is computed inside the repo from those results, and a
@@ -209,12 +223,23 @@ neither should delay Parts 1-3 — but the end goal is the whole brief, not a
 prototype, and this part is where the rest of it lands.*
 
 ## Stage 16: The Auditor
-Dead code and measurable slowness, both of which prove themselves: delete it and
-the tests still pass, or time it before and after. "A smarter way to do this"
-ships as *proposed*, never *proven*.
+Four kinds of improvement that can be proved rather than argued:
 
-Done when: the Auditor reports dead code and speed improvements with evidence
-attached, and anything unprovable appears only in the proposed section.
+- **Security** — a dependency with a publicly known hole either has it or does
+  not. Cheap, objective, and needs no AI.
+- **Still runs** — does it work on current versions of the language? Cheap, and
+  invisible to the owner, whose own machine works fine.
+- **Speed** — time it before and after. Harder than it sounds: most projects
+  have nothing to time, so a benchmark has to be written, and then part of what
+  is being measured is our own benchmark.
+- **Dead code** — delete it, the tests still pass.
+
+"A smarter way to do this" has no proof available and ships as *proposed*,
+never *proven*. Metrics that score how tangled code is are guesses about
+quality, not measures of it — a number can improve while the code gets worse.
+
+Done when: each of the four reports improvements with evidence attached, and
+anything unprovable appears only in the proposed section.
 
 ## Stage 17: Private repositories
 Accept code that is not already public, with the promises that entails.
@@ -239,7 +264,6 @@ Unresolved by design, each with the evidence that would settle it.
 - **Scope is Luke's call, and it is made: all five parts.** The brief came from
   Alex but the decision about how much of it gets built does not. Recorded here
   so nobody re-opens it by going back to the brief and reading ambition into it.
-- **How long this gets.** Scope is the full brief with no stated deadline, and
-  third year plus an existing daily newsletter are both live. *Settled by:
-  putting a date on Part 2 specifically — if "better" cannot be proved by then,
-  narrow the project to what can be.*
+- **How long this gets — deliberately left open.** Luke declined a deadline on
+  2026-09-07. Worth revisiting only if Part 2 stalls, since everything
+  downstream assumes it works.
