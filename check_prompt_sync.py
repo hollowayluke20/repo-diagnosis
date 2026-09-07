@@ -35,6 +35,15 @@ def normalise(s):
 def main():
     if not TXT.exists():
         sys.exit(f"missing: {TXT.name} - there is no prompt to run")
+    # ASCII only. Em dashes and curly quotes have already been silently
+    # corrupted once, leaving the model reading "The structure <?> does the
+    # code do what it is written to do?" - and they break stdin encoding too.
+    raw = TXT.read_text(encoding="utf-8")
+    odd = sorted({c for c in raw if ord(c) > 127})
+    if odd:
+        print(f"PROMPT NOT ASCII: {odd}")
+        print("Rewrite those as plain ASCII - they corrupt silently.")
+        sys.exit(1)
     if not MD.exists():
         # the intended state: one file, so nothing can disagree with it
         others = [p for p in (ROOT / "prompts").glob("*")

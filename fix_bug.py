@@ -36,7 +36,7 @@ FIX_PROMPT = """There is a defect in this codebase.
 
 {finding}
 
-A script that demonstrates it is at _repro.py in this folder. Run it — it fails.
+A script that demonstrates it is at _repro.py in this folder. Run it. It fails.
 
 Your job: change the code so that script passes.
 
@@ -44,7 +44,7 @@ Rules
 - Do not modify _repro.py.
 - Do not modify, delete or add any test file.
 - Do not delete a feature to make the failure go away.
-- A Python installation is at .python\\python.exe — use it for anything you run.
+- A Python installation is at .python\\python.exe - use it for anything you run.
 - Do not search the internet.
 
 You may make at most {max_attempts} attempts. Run _repro.py yourself to check
@@ -69,8 +69,8 @@ FIX_SCHEMA = {
 def sh(cmd, cwd=None, timeout=900, prompt=None):
     """prompt goes down STDIN. Passing a multi-line prompt as an argument
     truncates it at the first newline through npm's .CMD shim on Windows."""
-    p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
-                       errors="replace",
+    p = subprocess.run(cmd, cwd=cwd, capture_output=True,
+                       encoding="utf-8", errors="replace",
                        input=prompt if prompt is not None else None,
                        stdin=None if prompt is not None else subprocess.DEVNULL,
                        timeout=timeout)

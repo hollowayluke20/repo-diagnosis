@@ -90,8 +90,12 @@ def main():
             sys.exit("REFUSING: web-search guard missing from the command")
 
         print(f"--- {name} ...", flush=True)
-        p = subprocess.run(cmd, capture_output=True, text=True,
-                           input=prompt_text, errors="replace", timeout=3600)
+        p = subprocess.run(cmd, capture_output=True,
+                           # encoding must be explicit: on Windows, text=True
+                           # encodes stdin as cp1252 and codex rejects it as
+                           # invalid UTF-8 the moment the prompt has an em dash
+                           encoding="utf-8", errors="replace",
+                           input=prompt_text, timeout=3600)
         log = (p.stdout or "") + (p.stderr or "")
         (outdir / "stdout.log").write_text(log, encoding="utf-8")
         # did the whole prompt actually arrive? check for a phrase from the end

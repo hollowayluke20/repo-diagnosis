@@ -12,12 +12,12 @@ something if you have independently established it is a defect and can give a
 concrete trigger for it.
 
 You may run the project's own test suite, and you may write and run your own
-throwaway scripts to test a hypothesis. Do not add anything to the project's
-own test files.
+throwaway scripts to test a hypothesis. Do not add anything to the project's own
+test files.
 
 Examine the code and report any defects you find. It is entirely possible that
-there are none. If you find nothing you are genuinely confident about, say so.
-Reporting nothing is a valid answer and is sometimes the correct one.
+there are none. If you find nothing you are genuinely confident about, say so —
+reporting nothing is a valid answer and is sometimes the correct one.
 
 Rules
 
@@ -31,24 +31,24 @@ How to look
 
 Examine three things, not one.
 
-1. The structure. Does the code do what it is written to do? Control flow,
+1. The structure — does the code do what it is written to do? Control flow,
    types, imports, logic.
-2. The shape of the data. What type of thing arrives at each boundary? What
+2. The shape of the data — what type of thing arrives at each boundary? What
    if a caller passes something valid but unusual?
-3. The content of the data. Separately from its type, what is inside it? What
-   did the author assume about the actual values: their size, range, format
-   and origin? Pay particular attention to hardcoded defaults and constants.
-   A default is an assumption written down. Ask what happens when the real
-   data does not match it.
+3. The content of the data — separately from its type, what is inside it?
+   What did the author assume about the actual values: their size, range, format
+   and origin? Pay particular attention to hardcoded defaults and constants — a
+   default is an assumption written down. Ask what happens when the real data
+   does not match it.
 
-Code can be structurally correct, receive exactly the type it expected, and
-still be wrong for the content that actually passes through it.
+Code can be structurally correct, receive exactly the type it expected, and still
+be wrong for the content that actually passes through it.
 
 What counts as a defect
 
 The code does something other than what it is clearly intended to do.
 
-These are NOT defects: style you would have written differently; behaviour
+These are not defects: style you would have written differently; behaviour
 that is unusual but intended; missing features; code failing on input it was
 never meant to accept; anything you cannot point at a specific trigger for.
 
@@ -57,22 +57,23 @@ Report at most five defects, ranked most serious first.
 For each one, give exactly:
 
 1. File and line
-2. What goes wrong, in one sentence
-3. Trigger: the specific input, argument or condition that causes it. Be
+2. What goes wrong — one sentence
+3. Trigger — the specific input, argument or condition that causes it. Be
    concrete: real values, not "invalid input" or "certain conditions".
-4. Expected vs actual: what should happen, and what happens instead
-5. Confidence: high / medium / low
-6. Verified? Say whether you actually ran something that demonstrated it, or
-   whether this is from reading alone.
-7. Reproduction: a short, self-contained Python script that demonstrates this
-   defect.
+4. Expected vs actual — what should happen, and what happens instead
+5. Confidence — high / medium / low
+6. Verified? — say whether you actually ran something that demonstrated it,
+   or whether this is from reading alone.
+
+7. Reproduction — a short, self-contained Python script that demonstrates
+   this defect.
 
 About the reproduction, because it is how your finding is scored:
 
 - It is RUN. A finding whose script does not fail is not counted, however well
   argued it is.
-- It must FAIL on this code, by raising an exception or exiting non-zero, and
-  it must fail BECAUSE OF THIS DEFECT. If the defect were fixed, it would pass.
+- It must FAIL on this code — raise an exception, or exit non-zero — and it
+  must fail BECAUSE OF THIS DEFECT. If the defect were fixed, it would pass.
 - It runs from the repository root, with the project importable. Plain Python
   only: no pytest, no fixtures, no command-line arguments, no test framework.
 - Do not catch and print the error. Let it surface, so the failure is real.
