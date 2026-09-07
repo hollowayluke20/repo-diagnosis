@@ -1,0 +1,130 @@
+===== BUILDING 3 CONTROLS (fixed commits - the bug is NOT there) =====
+--- building cookiecutter/1 (FIXED commit) ...
+    INVALID - known test PASSED - bug does not reproduce here (expected: built at fixed commit)
+--- building httpie/3 (FIXED commit) ...
+    INVALID - known test PASSED - bug does not reproduce here (expected: built at fixed commit)
+--- building tqdm/1 (FIXED commit) ...
+    INVALID - known test PASSED - bug does not reproduce here (expected: built at fixed commit)
+
+0/3 valid. Report: reports/rejections.md
+
+===== DIAGNOSIS ON THE CONTROLS =====
+--- cookiecutter-1-FIXED ...
+    ok, 3 findings
+--- httpie-3-FIXED ...
+    ok, 3 findings
+--- tqdm-1-FIXED ...
+    ok, 5 findings
+
+===== 5 PRACTICE PROJECTS =====
+--- httpie-2 ...
+    ok, 3 findings
+--- youtube-dl-1 ...
+    ok, 2 findings
+--- tornado-2 ...
+    ok, 4 findings
+--- fastapi-2 ...
+    ok, 4 findings
+--- spacy-3 ...
+    ok, 4 findings
+
+===== SCORING EVERYTHING =====
+  black-1 #1: CONFIRMED  [right file, wrong place]
+  black-1 #2: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #1: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #2: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #3: CONFIRMED
+  cookiecutter-1 #4: CONFIRMED
+  fastapi-2 #1: CONFIRMED
+  fastapi-2 #2: CONFIRMED
+  fastapi-2 #3: CONFIRMED
+  fastapi-2 #4: CONFIRMED
+  httpie-2 #1: CONFIRMED
+  httpie-2 #2: CONFIRMED
+  httpie-2 #3: CONFIRMED
+  httpie-3 #1: CONFIRMED
+  httpie-3 #2: CONFIRMED
+  httpie-3 #3: CONFIRMED  [right file, wrong place]
+  httpie-3 #4: UNCONFIRMED
+  spacy-3 #1: CONFIRMED
+  spacy-3 #2: CONFIRMED
+  spacy-3 #3: CONFIRMED
+  spacy-3 #4: CONFIRMED
+  tornado-2 #1: CONFIRMED
+  tornado-2 #2: CONFIRMED
+  tornado-2 #3: CONFIRMED
+  tornado-2 #4: CONFIRMED
+  youtube-dl-1 #1: CONFIRMED
+  youtube-dl-1 #2: CONFIRMED
+reproduction**, not by reading it.
+
+- **Catch rate: 0%** (0 of 8 instances) — found the bug the
+  dataset catalogued. Low is expected; the dataset records one bug per
+  project.
+- **Confirmation rate: 96%** (26 of 27 findings) — reproductions that
+  actually failed. This is the quality measure.
+- **Noise rate: 4%** (1 unconfirmed, 0 malformed).
+
+
+-> reports/scores.md and reports/verdicts.json
+===== DONE =====
+--- black-2 ...
+    ok, 2 findings
+--- black-3 ...
+    ok, 3 findings
+--- cookiecutter-2 ...
+    ok, 3 findings
+--- fastapi-1 ...
+    ok, 2 findings
+--- fastapi-3 ...
+    no result written (exit 1)
+===== SCORING ALL =====
+  black-1 #1: CONFIRMED  [right file, wrong place]
+  black-1 #2: CONFIRMED  [right file, wrong place]
+  black-2 #1: CONFIRMED  [right file, wrong place]
+  black-2 #2: CONFIRMED
+  black-3 #1: CONFIRMED  [right file, wrong place]
+  black-3 #2: CONFIRMED  [right file, wrong place]
+  black-3 #3: CONFIRMED
+  cookiecutter-1 #1: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #2: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #3: CONFIRMED
+  cookiecutter-1 #4: CONFIRMED
+  cookiecutter-2 #1: CONFIRMED
+  cookiecutter-2 #2: CONFIRMED
+  cookiecutter-2 #3: CONFIRMED
+  fastapi-1 #1: CONFIRMED  [CATALOGUED]
+  fastapi-1 #2: CONFIRMED  [CATALOGUED]
+  fastapi-2 #1: CONFIRMED
+  fastapi-2 #2: CONFIRMED
+  fastapi-2 #3: CONFIRMED
+  fastapi-2 #4: CONFIRMED
+  httpie-2 #1: CONFIRMED
+  httpie-2 #2: CONFIRMED
+  httpie-2 #3: CONFIRMED
+  httpie-3 #1: CONFIRMED
+  httpie-3 #2: CONFIRMED
+  httpie-3 #3: CONFIRMED  [right file, wrong place]
+  httpie-3 #4: UNCONFIRMED
+  spacy-3 #1: CONFIRMED
+  spacy-3 #2: CONFIRMED
+  spacy-3 #3: CONFIRMED
+  spacy-3 #4: CONFIRMED
+  tornado-2 #1: CONFIRMED
+  tornado-2 #2: CONFIRMED
+  tornado-2 #3: CONFIRMED
+  tornado-2 #4: CONFIRMED
+  youtube-dl-1 #1: CONFIRMED
+  youtube-dl-1 #2: CONFIRMED
+reproduction**, not by reading it.
+
+- **Catch rate: 8%** (1 of 12 instances) — found the bug the
+  dataset catalogued. Low is expected; the dataset records one bug per
+  project.
+- **Confirmation rate: 97%** (36 of 37 findings) — reproductions that
+  actually failed. This is the quality measure.
+- **Noise rate: 3%** (1 unconfirmed, 0 malformed).
+
+
+-> reports/scores.md and reports/verdicts.json
+===== ALL DONE =====

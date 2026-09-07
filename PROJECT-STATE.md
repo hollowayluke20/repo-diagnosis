@@ -27,17 +27,34 @@ worked twice with one honest refusal.
 
 ## Results so far
 
-Numbers are from **three projects**, which is not yet evidence.
+**12 practice projects and 3 controls**, all scored by running the AI's own
+reproduction scripts rather than by reading them.
 
-- 6 findings, **all confirmed real** by running their reproductions
-- 1 of 3 was the bug the dataset catalogued
-- black: fixed a real bug in 1 attempt, all 127 of its own tests still passing
-- httpie: found and fixed a bug on a project it had never seen, 1 attempt
-- phantom (told a bug existed where none did): **refused and changed nothing**,
-  correctly identifying the test as the problem
+| | |
+|---|---|
+| Confirmation rate | **97%** - 36 of 37 findings actually broke the code |
+| Noise | 3% - one reproduction that ran without failing |
+| Catch rate | **8%** - 1 of 12 found the bug the dataset catalogued |
 
-The phantom test was easier than it should be — the script announced itself.
-A harder version would import the module, do real work, and fail subtly.
+**The controls passed.** Three projects rebuilt at the commit where their bug
+was *fixed*, 11 findings between them, 10 confirmed real, and **not one claimed
+the fixed bug was still there.** It does not invent work on code that has been
+repaired. That was the largest untested hole on the bug side.
+
+One control finding was flagged by the scorer as landing on the fixed bug and
+turned out not to be: same file, neighbouring function, a genuinely different
+defect. The +/-15 line proximity window is too loose for dense files.
+
+**On the catch rate.** 8% is a fact about the dataset, not the AI. BugsInPy
+records one bug per project; the system finds real ones nobody wrote down. On
+12 projects it produced 36 demonstrable defects and matched the catalogued one
+once. `SCORING.md` predicted this before any batch ran, which is the only
+reason it can be reported rather than argued about.
+
+**Fixing, demonstrated on 3 projects:** black fixed a real bug in one attempt
+with all 127 of its own tests still passing; httpie found and fixed one in a
+project it had never seen; and the phantom control - told a defect existed
+where none did - refused and changed nothing.
 
 ## What is finished
 
