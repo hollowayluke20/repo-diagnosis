@@ -66,9 +66,13 @@ FIX_SCHEMA = {
 }
 
 
-def sh(cmd, cwd=None, timeout=900):
+def sh(cmd, cwd=None, timeout=900, prompt=None):
+    """prompt goes down STDIN. Passing a multi-line prompt as an argument
+    truncates it at the first newline through npm's .CMD shim on Windows."""
     p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
-                       errors="replace", stdin=subprocess.DEVNULL,
+                       errors="replace",
+                       input=prompt if prompt is not None else None,
+                       stdin=None if prompt is not None else subprocess.DEVNULL,
                        timeout=timeout)
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
@@ -124,7 +128,9 @@ def main():
         shutil.rmtree(work, ignore_errors=True)
     FIXES.mkdir(exist_ok=True)
     print(f"copying instance -> fixes/{tag} ...", flush=True)
-    shutil.copytree(inst, work)
+    # skip caches: they can be locked by a previous run and the copy dies
+    shutil.copytree(inst, work, ignore=shutil.ignore_patterns(
+        ".pytest_cache", "__pycache__", ".ruff_cache", "*.pyc"))
 
     py = work / ".python" / "python.exe"
     repro = finding["reproduction"]
@@ -165,7 +171,7 @@ def main():
                   "--ephemeral", "--ignore-user-config", "--approve-for-me",
                   "-c", "web_search=disabled",
                   "--output-schema", str(schema_path),
-                  "-o", str(out_path), prompt], timeout=3600)
+                  "-o", str(out_path), "-"], timeout=3600, prompt=prompt)
     (work / "_fix_stdout.log").write_text(out, encoding="utf-8")
 
     claim = {}

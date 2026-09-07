@@ -37,7 +37,11 @@ def codex_cmd(instance_dir, out_file, prompt_text):
             "-c", WEB_GUARD,
             "--output-schema", str(SCHEMA),
             "-o", str(out_file),
-            prompt_text]
+            # "-" means: read the prompt from stdin.
+            # Passing it as an argument silently truncates at the first
+            # newline through npm's .CMD shim on Windows - every run before
+            # this fix received ONLY the first line of the prompt.
+            "-"]
     # NOT --ignore-rules: it blocks local shell tools, and a blocked agent
     # goes looking elsewhere.
 
@@ -87,10 +91,15 @@ def main():
 
         print(f"--- {name} ...", flush=True)
         p = subprocess.run(cmd, capture_output=True, text=True,
-                           stdin=subprocess.DEVNULL, errors="replace",
-                           timeout=3600)
-        (outdir / "stdout.log").write_text((p.stdout or "") + (p.stderr or ""),
-                                           encoding="utf-8")
+                           input=prompt_text, errors="replace", timeout=3600)
+        log = (p.stdout or "") + (p.stderr or "")
+        (outdir / "stdout.log").write_text(log, encoding="utf-8")
+        # did the whole prompt actually arrive? check for a phrase from the end
+        # of it, not the beginning.
+        canary = "what you examined"
+        if canary not in log.lower():
+            print("    !! PROMPT TRUNCATED - the agent did not receive the "
+                  "full instructions. Result is not comparable.")
         searched = (p.stdout or "").lower().count("web search")
         if searched:
             print(f"    !! {searched} web searches despite the guard - "
