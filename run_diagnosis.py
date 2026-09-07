@@ -15,7 +15,11 @@ from pathlib import Path
 from progress_marker import progress_marker
 
 ROOT = Path(__file__).parent.resolve()
-KEYS, INSTANCES, RESULTS = ROOT / "keys", ROOT / "instances", ROOT / "results"
+INSTANCES, RESULTS = ROOT / "instances", ROOT / "results"
+KEYS = ROOT.parent / "repo-diagnosis-keys"   # OUTSIDE the repo: an
+# agent inside instances/<name> can walk up to the repo root, and the
+# answers must not be reachable from there. Verified 2026-09-07 that
+# ../../keys/ resolved from inside an instance.
 PROMPT = ROOT / "prompts" / "diagnosis-v3.txt"
 SCHEMA = ROOT / "findings-schema.json"
 

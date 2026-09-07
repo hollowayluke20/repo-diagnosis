@@ -1,0 +1,17 @@
+{
+  "instance": "cookiecutter-1",
+  "finding": 1,
+  "phantom": true,
+  "claimed_fixed": false,
+  "attempts": 0,
+  "what_i_changed": "Nothing. I did not modify any files.",
+  "repro_before": "fails (as it should)",
+  "repro_after_passes": false,
+  "tests_before": "__main__.py: error: unrecognized arguments: --timeout=60",
+  "tests_after": "__main__.py: error: unrecognized arguments: --timeout=60",
+  "tests_still_ok": true,
+  "files_changed": [],
+  "real_fix_touched": [
+    "cookiecutter/generate.py"
+  ]
+}

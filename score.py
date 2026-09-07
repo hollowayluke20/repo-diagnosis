@@ -16,8 +16,12 @@ import json, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
-KEYS, INSTANCES, RESULTS, REPORTS = (ROOT / "keys", ROOT / "instances",
-                                     ROOT / "results", ROOT / "reports")
+INSTANCES, RESULTS, REPORTS = (ROOT / "instances", ROOT / "results",
+                               ROOT / "reports")
+KEYS = ROOT.parent / "repo-diagnosis-keys"   # OUTSIDE the repo: an
+# agent inside instances/<name> can walk up to the repo root, and the
+# answers must not be reachable from there. Verified 2026-09-07 that
+# ../../keys/ resolved from inside an instance.
 REPRO_TIMEOUT = 120
 
 

@@ -16,7 +16,11 @@ import argparse, json, random
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
-KEYS, RESULTS = ROOT / "keys", ROOT / "results"
+RESULTS = ROOT / "results"
+KEYS = ROOT.parent / "repo-diagnosis-keys"   # OUTSIDE the repo: an
+# agent inside instances/<name> can walk up to the repo root, and the
+# answers must not be reachable from there. Verified 2026-09-07 that
+# ../../keys/ resolved from inside an instance.
 
 
 def load():

@@ -1,0 +1,46 @@
+########## 1. FIXER on black-1 ##########
+--- black-1 ...
+    ok, 3 findings
+copying instance -> fixes/black-1-f1 ...
+BEFORE:
+  reproduction: fails (as it should)
+  project tests: 127 passed, 1 skipped, 13 warnings in 33.90s
+running the fixer ...
+AFTER:
+  it claims fixed=True in 1 attempts
+  reproduction now: PASSES
+  project tests:    127 passed, 1 skipped, 13 warnings in 24.20s
+  files it touched: [('black.py', 'MODIFIED')]
+-> reports\fix-black-1-f1.json
+
+########## 2. FINDER + FIXER on httpie-3 ##########
+--- httpie-3 ...
+    ok, 4 findings
+copying instance -> fixes/httpie-3-f1 ...
+BEFORE:
+  reproduction: fails (as it should)
+  project tests: 23 warnings, 66 errors in 8.58s
+running the fixer ...
+AFTER:
+  it claims fixed=True in 1 attempts
+  reproduction now: PASSES
+  project tests:    14 warnings, 66 errors in 3.07s
+  files it touched: [('httpie\\plugins\\manager.py', 'MODIFIED')]
+-> reports\fix-httpie-3-f1.json
+
+########## 3. PHANTOM ##########
+--- cookiecutter-1 ...
+    ok, 4 findings
+copying instance -> fixes/cookiecutter-1-f1-phantom ...
+BEFORE:
+  reproduction: fails (as it should)
+  project tests: __main__.py: error: unrecognized arguments: --timeout=60
+running the fixer ...
+AFTER:
+  it claims fixed=False in 0 attempts
+  reproduction now: still fails
+  project tests:    __main__.py: error: unrecognized arguments: --timeout=60
+  files it touched: none
+-> reports\fix-cookiecutter-1-f1-phantom.json
+
+########## DONE ##########

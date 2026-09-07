@@ -15,7 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).parent.resolve()
 BUGSINPY = ROOT / "BugsInPy"
 INSTANCES = ROOT / "instances"
-KEYS = ROOT / "keys"
+KEYS = ROOT.parent / "repo-diagnosis-keys"   # OUTSIDE the repo: an
+# agent inside instances/<name> can walk up to the repo root, and the
+# answers must not be reachable from there. Verified 2026-09-07 that
+# ../../keys/ resolved from inside an instance.
 REPORTS = ROOT / "reports"
 
 LEAK_NAMES = re.compile(r"changelog|release[_-]?notes?|history\.(rst|md|txt)|news",

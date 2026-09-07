@@ -2,15 +2,20 @@
   "instance": "black-1",
   "finding": 1,
   "phantom": false,
-  "claimed_fixed": false,
-  "attempts": 0,
-  "what_i_changed": "Nothing yet\u2014the defect has not been described.",
+  "claimed_fixed": true,
+  "attempts": 1,
+  "what_i_changed": "Changed black.py\u2019s f-string feature check to lowercase the two-character prefix before matching, covering mixed-case forms such as `rF`, `Rf`, `fR`, and `Fr`.",
   "repro_before": "fails (as it should)",
-  "repro_after_passes": false,
-  "tests_before": "127 passed, 1 skipped, 13 warnings in 26.77s",
-  "tests_after": "127 passed, 1 skipped, 13 warnings in 25.65s",
+  "repro_after_passes": true,
+  "tests_before": "127 passed, 1 skipped, 13 warnings in 33.90s",
+  "tests_after": "127 passed, 1 skipped, 13 warnings in 24.20s",
   "tests_still_ok": false,
-  "files_changed": [],
+  "files_changed": [
+    [
+      "black.py",
+      "MODIFIED"
+    ]
+  ],
   "real_fix_touched": [
     "black.py"
   ]

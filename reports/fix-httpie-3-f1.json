@@ -1,0 +1,22 @@
+{
+  "instance": "httpie-3",
+  "finding": 1,
+  "phantom": false,
+  "claimed_fixed": true,
+  "attempts": 1,
+  "what_i_changed": "Changed formatter grouping to append repeated group runs using `setdefault(...).extend(...)` instead of overwriting the existing group.",
+  "repro_before": "fails (as it should)",
+  "repro_after_passes": true,
+  "tests_before": "23 warnings, 66 errors in 8.58s",
+  "tests_after": "14 warnings, 66 errors in 3.07s",
+  "tests_still_ok": false,
+  "files_changed": [
+    [
+      "httpie\\plugins\\manager.py",
+      "MODIFIED"
+    ]
+  ],
+  "real_fix_touched": [
+    "httpie/sessions.py"
+  ]
+}
