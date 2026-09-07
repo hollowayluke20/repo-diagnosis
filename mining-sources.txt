@@ -1,0 +1,34 @@
+# Where the library's raw material comes from.
+#
+# One repository per line, "owner/name". Comments and blank lines ignored.
+#
+# NOTHING in here may be a project in the test corpus, or anything in
+# BugsInPy/projects/. A fix mined from cookiecutter IS the answer to the
+# cookiecutter exam paper. mine_library.py refuses rather than warning, and
+# check_library_clean.py re-checks after the fact - because the contamination
+# can also arrive by the CORPUS changing, long after mining.
+#
+# Chosen for small, self-contained bug fixes rather than for fame: parsing,
+# paths, encodings, validation and protocol handling, which is where
+# transferable fix shapes live. Expected to grow to 100-200.
+
+pallets/click
+psf/requests
+pallets/werkzeug
+pallets/jinja
+pallets/flask
+urllib3/urllib3
+encode/httpx
+encode/starlette
+pydantic/pydantic
+python-attrs/attrs
+python-jsonschema/jsonschema
+paramiko/paramiko
+dateutil/dateutil
+Textualize/rich
+redis/redis-py
+PyGithub/PyGithub
+tox-dev/tox
+python-poetry/poetry
+pypa/pip
+celery/celery

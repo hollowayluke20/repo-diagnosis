@@ -48,3 +48,9 @@ portability_scratch/
 # Per-instance portability errors can reveal the catalogue test names.
 reports/portability.md
 reports/portability_detail.json
+
+# --- mined material: cloned repos and verbatim diffs, both excluded ---
+# mining-cache/ is large; raw-parts/ holds other projects source code verbatim,
+# and "take the idea, not the code" is not a policy if the code is committed.
+mining-cache/
+raw-parts/
