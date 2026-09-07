@@ -172,12 +172,19 @@ Done when: breaking finds defects the reading-based diagnosis missed, measured
 on the same corpus with the same scoring rules from Stage 1.
 
 ## Stage 10: Find how others solved it
-Turn a specific defect into a searchable description, then return candidate
-approaches from open source, products and research, each with a citable source.
+Alex's actual thesis - "why reinvent the wheel when you can just take it" -
+and the reason the product exists at all. Turn a specific defect into a
+searchable description, then return candidate approaches from open-source
+projects, products, competitors and research, each with a citable source.
 
-Done when: given a defect from the corpus, the search returns ranked candidate
-approaches with sources, plus a recorded judgement for each of whether it
-transfers to this repo.
+Done when: for defects from the corpus, an approach found by the search is
+applied and **passes Stage 7's proof** - the failure gone, nothing else broken.
+
+The earlier version of this finish line was "returns ranked candidates with a
+recorded judgement of whether each transfers", which is a stage you complete by
+producing a list. Plausible rubbish would have satisfied it. Searching is only
+worth anything if something found outside the repo actually fixes something
+inside it, so that is what gets measured.
 
 ## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
