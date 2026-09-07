@@ -1,0 +1,37 @@
+# --- caches and build noise ---
+.ruff_cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+.venv/
+
+# --- the experiment's answer material ---
+# Keeping these out is the point of the whole setup: anyone (or anything)
+# reading this repo must not be able to see the answers before the test runs.
+BUILD-TASK.md
+keys/
+subject-staging/
+# Throwaway probes written to confirm specific bugs by running them. They are
+# our own code, but each one names a defect and its exact trigger, so they leak
+# answers as surely as keys/ does. Say the word and I will track them.
+repro_check.py
+verify_findings.py
+v4_check.py
+
+# --- downloaded or generated, not written here ---
+# BugsInPy: cloned bug dataset, ~9MB / 2,400 files, upstream project.
+BugsInPy/
+# instances/: built test repos. ~121MB EACH (each carries its own Python
+# installation) - about 3.4GB across 28. Fully reproducible from
+# build_instances.py, so there is nothing to preserve.
+instances/
+# src/: 1,517 files of other people's project source (black, cookiecutter,
+# luigi, sanic, thefuck), pulled in as a side effect of installing instances.
+src/
+
+# --- scoring output derived from the answer keys ---
+# score.py copies key_files, key_lines and the bug patch text into these, so
+# they leak the answers even though keys/ itself is excluded.
+# reports/rejections.md and reports/build.log are clean and stay tracked.
+reports/needs_judgement.json
+reports/scores.md

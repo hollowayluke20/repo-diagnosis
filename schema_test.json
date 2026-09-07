@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "file_count": {"type": "integer"},
+    "summary": {"type": "string"}
+  },
+  "required": ["file_count", "summary"],
+  "additionalProperties": false
+}

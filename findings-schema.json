@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["findings", "what_examined"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "line", "what_goes_wrong", "trigger", "expected",
+                     "actual", "confidence", "verified_by_running"],
+        "properties": {
+          "file": {"type": "string"},
+          "line": {"type": "integer"},
+          "what_goes_wrong": {"type": "string"},
+          "trigger": {"type": "string"},
+          "expected": {"type": "string"},
+          "actual": {"type": "string"},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+          "verified_by_running": {"type": "boolean"}
+        }
+      }
+    },
+    "what_examined": {"type": "string"}
+  }
+}
