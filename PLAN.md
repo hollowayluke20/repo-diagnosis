@@ -165,6 +165,37 @@ Done when: a deliberately hostile test repo — one that tries to read outside i
 workspace, reach the network, and write to the host — runs to completion with
 all three attempts blocked and logged.
 
+**DONE, 2026-09-07.** Built in `sandbox/`, isolated from the folders other
+agents are working in.
+
+- **This machine has no Docker, no WSL, and Windows 11 Home has no Windows
+  Sandbox feature** — all three checked directly rather than assumed. The seal
+  is built on the **AppContainer**, the same isolation Edge tabs and Store apps
+  run under: a throwaway Windows identity that owns nothing, so file
+  permissions (which are just a list of identities allowed to touch a file)
+  never name it, and it gets no network unless explicitly granted a
+  capability, which it is not. Works without admin rights.
+- **Proved by escaping first.** `sandbox/canary-repo/canary.py` tries to (1)
+  read the answer keys and our own reports, (2) reach the network — by
+  hostname, then by raw TCP to a hardcoded IP so a DNS failure can't be
+  mistaken for a network block, (3) write a file to the host home directory.
+  Run unsealed, all three succeed. Run through `sandbox/box.py`, all three are
+  refused by the OS. `sandbox/prove.py` runs both halves back to back and
+  checks the host file's existence itself rather than trusting the canary's
+  own report of what happened. Result: `sandbox/proof/verdict.json`,
+  `unsealed.log`, `sealed.log`.
+- **Known limitation, not yet solved:** the container identity is derived from
+  a fixed name, so two sealed runs at the same moment would collide (the
+  second run deletes and recreates the profile the first is using). Fine for
+  proving the seal works; needs a per-run identity before this runs
+  concurrently on a real platform.
+- Runtime note: a non-admin account cannot grant the sealed identity access to
+  the system Python install, so a one-off read-only copy is made in
+  `%LOCALAPPDATA%\repo-diagnosis-box\runtime` (~150MB, made once, reused,
+  holds no run data — the equivalent of a container base image). Each run's
+  actual workspace is unique and destroyed afterwards; nothing about a run
+  persists.
+
 ---
 
 # PART 3 — Can it make the improvement?
