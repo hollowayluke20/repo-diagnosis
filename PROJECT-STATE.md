@@ -65,6 +65,8 @@ where none did - refused and changed nothing.
   prompt arrives truncated
 - `score.py` — runs reproductions, reports catch rate and confirmation rate
 - `fix_bug.py` — works on a copy, before-and-after test baseline, `--phantom`
+- `check_still_runs.py` — its gate compares each original-Python test baseline
+  with a clean current-Python copy and rejects any newly worse suite
 - `manifest.py`, `check_prompt_sync.py`, `progress_marker.py`
 
 ## What is half-built

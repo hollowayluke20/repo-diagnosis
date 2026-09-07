@@ -42,3 +42,9 @@ reports/needs_judgement.json
 # they are all reproducible from fix_bug.py
 fixes/
 _fix_schema.json
+
+# Disposable current-Python copies made by check_still_runs.py.
+portability_scratch/
+# Per-instance portability errors can reveal the catalogue test names.
+reports/portability.md
+reports/portability_detail.json
