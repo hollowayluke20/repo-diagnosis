@@ -70,6 +70,16 @@ def main():
                 problems.append(f"{e['store']}/{e['id']}: source '{src}' "
                                 f"contains banned project '{part}'")
 
+    # Entries are injected verbatim into the fixer's prompt, and a prompt
+    # corrupted by one stray character has already cost this project a whole
+    # batch. Same rule as check_prompt_sync.py: ASCII only.
+    for e in entries:
+        nonascii = sorted({c for c in e["body"] if ord(c) > 127})
+        if nonascii:
+            problems.append(f"{e['store']}/{e['id']}: {len(nonascii)} non-ascii "
+                            f"character(s) {nonascii} - this text goes into a "
+                            f"prompt, and corruption there is silent")
+
     print(f"checked {len(entries)} entries against {len(banned)} banned projects")
     if problems:
         print("\nCONTAMINATED:")

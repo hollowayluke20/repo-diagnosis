@@ -1,0 +1,48 @@
+--- 1/20  click-18070584fc: fix type for show_default, can be str
+    refused: The change only broadens a static type annotation to include an already-supported string v
+--- 2/20  click-1c20dc6e72: Fix default handling to defer UNSET normalization
+    kept  tags=['parsing', 'defaults', 'sentinels', 'ordering']
+--- 3/20  click-34723d12b1: Fix _pipepager()/_tempfilepage() to work with multi-call bin
+    kept  tags=['file-paths', 'symlinks', 'process-execution']
+--- 4/20  click-701b313160: Fix completions for quoted/escaped parameters in Fish (#3013
+    kept  tags=['shell-completion', 'parsing', 'escaping']
+--- 5/20  click-73d7de5f74: Fix versionchanged entry for click.Path (#2345)
+    refused: The change only corrects a parameter name in documentation; it does not fix runtime behavi
+--- 6/20  click-8c5f779185: Fix error in new AppEngine environments
+    kept  tags=['environment-detection', 'error-handling', 'compatibility']
+--- 7/20  click-c159967b47: Fix help text when using env vars with defaults
+    refused: The change only adds spacing between help-text annotations, so it is a cosmetic formatting
+--- 8/20  click-c6bf75fa74: Fixes windows specific error regarding spaces in filepaths f
+    kept  tags=['windows', 'file-paths', 'subprocess', 'argument-parsing']
+--- 9/20  click-d340b0c120: Fix speculative speculative empty string check
+    kept  tags=['type-checking', 'formatting', 'error-handling']
+--- 10/20  click-f6710e5406: fix: always use parameter UTF-8 fallback
+    kept  tags=['encoding', 'command-line', 'error-handling']
+--- 11/20  requests-1604e20fc8: Fix the proxy_bypass_registry function all returning true in
+    kept  tags=['parsing', 'filtering', 'pattern-matching', 'configuration']
+--- 12/20  requests-2d5517682b: Fix inconsistent exception for JSONDecode error (#6097)
+    kept  tags=['parsing', 'encoding', 'error-handling', 'api-consistency']
+--- 13/20  requests-38f3f8ecb9: Fix auth parsing for proxies
+    kept  tags=['url-parsing', 'authentication', 'proxies']
+--- 14/20  requests-3ff3ff21dd: Fix #6628 - JSONDecodeError are not deserializable
+    !! names its source (exceptions) - not an idea, refused
+--- 15/20  requests-4246792b81: Fix erroneous use of 'schema' instead of 'scheme'
+    refused: The change only corrects user-facing and documentation terminology from “schema” to “schem
+--- 16/20  requests-47914226c2: Fix empty netrc entry usage (#7205)
+    kept  tags=['authentication', 'validation', 'configuration']
+--- 17/20  requests-6404f345e5: Fix `prepare_body` stream detection for `__getattr__`-based 
+    kept  tags=['streams', 'proxy-objects', 'interface-detection', 'redirects']
+--- 18/20  requests-6f205ff422: Fix `_encode_files` detection for `__getattr__`-based file w
+    kept  tags=['file-uploads', 'duck-typing', 'proxies', 'validation']
+--- 19/20  requests-e511bc7277: Fix mutability issues with headers input types (#7431)
+    refused: The change only narrows and consolidates static type annotations for header inputs; it doe
+--- 20/20  requests-f0198e6dfc: Fix malformed value parsing for Content-Type (#7309)
+    kept  tags=['parsing', 'validation', 'headers', 'error-handling']
+
+labelled 14, refused 6, failed 0  ->  stores now {'library': 17, 'database': 0}
+  refused click-18070584fc: The change only broadens a static type annotation to include an already-supported string value; it d
+  refused click-73d7de5f74: The change only corrects a parameter name in documentation; it does not fix runtime behavior or a tr
+  refused click-c159967b47: The change only adds spacing between help-text annotations, so it is a cosmetic formatting fix rathe
+  refused requests-3ff3ff21dd: named identifiers: ['exceptions']
+  refused requests-4246792b81: The change only corrects user-facing and documentation terminology from “schema” to “scheme”; it doe
+  refused requests-e511bc7277: The change only narrows and consolidates static type annotations for header inputs; it does not alte

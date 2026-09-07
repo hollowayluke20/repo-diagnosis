@@ -109,24 +109,67 @@ def label(part, schema_path):
         return None, f"unparseable output: {e}"
 
 
+# Module names that are also ordinary English or ordinary programming words.
+# Checking file stems blindly rejected a perfectly good entry on 2026-09-07
+# because its text contained "exceptions" - which is both a filename in the
+# source project and a word any description of error handling will use.
+GENERIC_STEMS = {
+    "exceptions", "exception", "errors", "utils", "util", "models", "model",
+    "core", "types", "sessions", "session", "main", "base", "common", "compat",
+    "helpers", "api", "client", "server", "config", "settings", "parser",
+    "parsers", "tools", "handlers", "request", "requests", "response",
+    "responses", "auth", "adapters", "structures", "decorators", "context",
+}
+
+# Characters that survive a round trip badly. U+FFFD means text was already
+# lost; the rest are typographic forms with plain ASCII equivalents.
+ASCII_MAP = {"‘": "'", "’": "'", "“": '"', "”": '"',
+             "–": "-", "—": " - ", "…": "...", " ": " ",
+             "′": "'", "″": '"', "«": '"', "»": '"'}
+
+
+def to_ascii(text):
+    """Entries are injected into the fixer's prompt, and a prompt corrupted by
+    one stray character has already cost this project a whole batch. Returns
+    (clean_text, n_replaced)."""
+    out, lost = [], 0
+    for ch in text or "":
+        if ord(ch) < 128:
+            out.append(ch)
+        elif ch in ASCII_MAP:
+            out.append(ASCII_MAP[ch])
+        else:
+            out.append("?")
+            lost += 1
+    return "".join(out), lost
+
+
 def leaks_identifiers(text, part):
     """The one rule worth checking rather than trusting.
 
     'Take the idea, not the code' fails quietly if the entry carries the
-    original function names, so an entry that names them is rejected here
-    instead of being retrieved forever afterwards.
+    original function names, so an entry naming them is rejected here rather
+    than being retrieved forever afterwards. Generic module names are exempt -
+    see GENERIC_STEMS.
     """
     low = (text or "").lower()
     names = {part["project"].lower()}
     for f in part["source_files"]:
-        names.add(Path(f).stem.lower())
+        stem = Path(f).stem.lower()
+        if stem not in GENERIC_STEMS:
+            names.add(stem)
     return sorted(n for n in names if len(n) > 3 and n in low)
 
 
 def write_entry(part, result):
     tags = [t.strip().lower() for t in result.get("tags", []) if t.strip()]
-    body = (f"## Problem\n\n{result['problem'].strip()}\n\n"
-            f"## Fix shape\n\n{result['fix_shape'].strip()}\n")
+    problem, l1 = to_ascii(result["problem"].strip())
+    fix_shape, l2 = to_ascii(result["fix_shape"].strip())
+    tags = [to_ascii(t)[0] for t in tags]
+    if l1 + l2:
+        print(f"    (replaced {l1 + l2} non-ascii character(s))")
+    body = (f"## Problem\n\n{problem}\n\n"
+            f"## Fix shape\n\n{fix_shape}\n")
     head = (f"---\n"
             f"status: found\n"
             f"source_project: {part['project']}\n"
@@ -152,8 +195,13 @@ def main():
     parts = []
     for p in sorted(RAW.glob("*.json")):
         d = json.loads(p.read_text(encoding="utf-8"))
-        if not (library.LIBRARY / f"{d['id']}.md").exists():
-            parts.append(d)
+        # skip what is already an entry, and what has already been judged not
+        # to be one - without the second, every run pays again to re-refuse
+        # the same duds
+        if (library.LIBRARY / f"{d['id']}.md").exists() or d.get("label_refused"):
+            continue
+        d["_path"] = str(p)
+        parts.append(d)
     parts = parts[:a.limit]
     if not parts:
         sys.exit("nothing unlabelled in raw-parts/ - run mine_library.py first")
@@ -171,6 +219,13 @@ def main():
     schema_path = ROOT / "_label_schema.json"
     schema_path.write_text(json.dumps(SCHEMA), encoding="utf-8")
 
+    def mark_refused(part, why):
+        """Record the judgement on the raw part so it is never paid for twice."""
+        p = Path(part["_path"])
+        d = json.loads(p.read_text(encoding="utf-8"))
+        d["label_refused"] = why[:300]
+        p.write_text(json.dumps(d, indent=2), encoding="utf-8")
+
     kept, refused, failed = [], [], []
     marker = (progress_marker(f"labelling {len(parts)} mined parts", "library/",
                               f"~{max(1, len(parts)//3)}0m")
@@ -186,6 +241,7 @@ def main():
                 continue
             if not result.get("usable"):
                 print(f"    refused: {result.get('why_not','')[:90]}")
+                mark_refused(part, result.get("why_not", "unusable"))
                 refused.append((part["id"], result.get("why_not", "")))
                 continue
             leaked = leaks_identifiers(
@@ -194,6 +250,7 @@ def main():
             if leaked:
                 print(f"    !! names its source ({', '.join(leaked)}) - "
                       f"not an idea, refused")
+                mark_refused(part, f"named identifiers: {leaked}")
                 refused.append((part["id"], f"named identifiers: {leaked}"))
                 continue
             write_entry(part, result)
