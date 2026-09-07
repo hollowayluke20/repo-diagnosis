@@ -100,8 +100,12 @@ rejected, and an empty result validates.
 ## Stage 5: A baseline number
 Run the whole corpus in one pass and produce the agreed measure.
 
-Done when: one recorded result exists per instance from a single batch, and the
-measure from Stage 1 is computed inside the repo from those results.
+Done when: one recorded result exists per instance from a single batch, the
+measure from Stage 1 is computed inside the repo from those results, and a
+README documents the route from clone to that number so somebody else could
+reproduce it. A committed check must also fail if a second copy of the prompt
+ever appears alongside the one the runner actually sends — two copies drift, and
+the copy that drifted was the one a person would read.
 
 ---
 
