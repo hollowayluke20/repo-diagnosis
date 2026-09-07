@@ -326,6 +326,45 @@ Also worth carrying forward: **"ships a test alongside the fix" is a free
 quality signal** and tracked per part as `has_test`. Those parts come with
 the original project's own proof of what the fix was for.
 
+### Labelling the first 20 (2026-09-07)
+
+**15 became entries, 5 were refused, 0 failed.** Tags are free-form, per Luke's
+call the same day.
+
+**Letting the labeller refuse a part was the highest-value decision here.** All
+five refusals were duds the mechanical filters had passed - "broadens a static
+type annotation", "corrects a parameter name in documentation", "adds spacing
+in help text", "corrects terminology in an error message". No blocklist would
+have caught those; a model reading the diff caught every one. Refusals are now
+recorded on the raw part, so a dud is never paid for twice.
+
+**Two faults the run exposed, both fixed:**
+
+1. **Replacement characters reached three entries.** Entries are injected
+   verbatim into the fixer's prompt, so this is the corrupted-prompt bug from
+   the harness bug list arriving by a new route. Entries are now forced to
+   ASCII at write time, and `check_library_clean.py` fails on any non-ASCII
+   character in a stored entry - the same rule `check_prompt_sync.py` applies
+   to the prompt.
+2. **The leak check rejected a good entry for containing the word
+   "exceptions"** - an ordinary English word that is also a filename in the
+   source project. Generic module names are now exempt.
+
+**Retrieval after labelling: better, and not yet trustworthy.** The flagship
+earlier failure is fixed - the mixed line-endings defect now ranks an encoding
+entry first, where before it ranked a mutable-default entry on the words "one"
+and "whose". But **15/15 findings now retrieve something, up from 10/15, and
+that is not evidence of improvement**: more entries simply means more chances
+to clear a two-word floor. Confident wrong matches remain, e.g. a
+"chooses the lexicographically smallest path" defect matching a "spaces in
+filepaths on Windows" entry at high score on shared path vocabulary. Whether
+any of this helps is exactly what `ab_fix.py` exists to answer, and it has not
+been run yet.
+
+Embedding decision implemented: **search matches on the Problem text and tags
+only, never the Fix shape.** A problem resembles another problem, not a cure;
+matching symptoms against treatments is how retrieval quietly underperforms.
+
 ## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
 written fresh for this codebase.
