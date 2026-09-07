@@ -1,0 +1,64 @@
+# Corpus manifest
+
+Every instance below has been PROVED to contain a reproducible bug:
+its own test was observed to fail on it. Instances that could not be
+built, or whose bug did not reproduce, are not here - see
+`reports/rejections.md` for those and why.
+
+No answers in this file: no file names, no line numbers, no patch.
+
+**33 instances — 23 practice, 10 locked.**
+
+| Instance | Python | Files | Lines | Pile |
+|---|---|---|---|---|
+| black-1 | 3.8.3 | 80 | 102996 | practice |
+| black-2 | 3.8.3 | 74 | 99184 | practice |
+| black-3 | 3.8.3 | 74 | 99169 | practice |
+| cookiecutter-1 | 3.9 (requested 3.6.9, used 3.9) | 84 | 7780 | practice |
+| cookiecutter-2 | 3.9 (requested 3.6.9, used 3.9) | 84 | 7663 | practice |
+| cookiecutter-3 | 3.9 (requested 3.6.9, used 3.9) | 82 | 7644 | locked |
+| cookiecutter-4 | 3.9 (requested 3.6.9, used 3.9) | 58 | 4874 | locked |
+| fastapi-1 | 3.8.3 | 502 | 28855 | practice |
+| fastapi-2 | 3.8.3 | 485 | 28400 | practice |
+| fastapi-3 | 3.8.3 | 483 | 28246 | practice |
+| httpie-1 | 3.9 (requested 3.7.3, used 3.9) | 48 | 6094 | practice |
+| httpie-2 | 3.9 (requested 3.7.3, used 3.9) | 46 | 5708 | practice |
+| httpie-3 | 3.9 (requested 3.7.3, used 3.9) | 45 | 5651 | practice |
+| luigi-1 | 3.8.3 | 251 | 60740 | practice |
+| luigi-2 | 3.8.3 | 251 | 60734 | locked |
+| sanic-1 | 3.8.3 | 115 | 20577 | locked |
+| sanic-2 | 3.8.3 | 114 | 20603 | locked |
+| sanic-3 | 3.8.3 | 115 | 20694 | practice |
+| spacy-1 | 3.9 (requested 3.7.7, used 3.9) | 684 | 127625 | locked |
+| spacy-2 | 3.9 (requested 3.7.7, used 3.9) | 674 | 127182 | practice |
+| spacy-3 | 3.9 (requested 3.7.7, used 3.9) | 672 | 128457 | practice |
+| thefuck-1 | 3.9 (requested 3.7.0, used 3.9) | 385 | 15304 | practice |
+| thefuck-2 | 3.9 (requested 3.7.0, used 3.9) | 365 | 14160 | practice |
+| thefuck-3 | 3.9 (requested 3.7.0, used 3.9) | 359 | 13985 | practice |
+| thefuck-4 | 3.9 (requested 3.7.0, used 3.9) | 350 | 13585 | practice |
+| tornado-1 | 3.9 (requested 3.7.0, used 3.9) | 112 | 43398 | practice |
+| tornado-2 | 3.9 (requested 3.7.0, used 3.9) | 112 | 43280 | practice |
+| tqdm-1 | 3.9 (requested 3.6.9, used 3.9) | 42 | 7012 | locked |
+| tqdm-2 | 3.9 (requested 3.6.9, used 3.9) | 35 | 6505 | locked |
+| tqdm-3 | 3.9 (requested 3.6.9, used 3.9) | 29 | 6049 | locked |
+| youtube-dl-1 | 3.9 (requested 3.7.0, used 3.9) | 839 | 134120 | practice |
+| youtube-dl-2 | 3.9 (requested 3.7.0, used 3.9) | 830 | 130070 | locked |
+| youtube-dl-3 | 3.9 (requested 3.7.0, used 3.9) | 815 | 126254 | practice |
+
+## The locked pile
+
+These are the only independent measurement this project will ever
+get. Running them requires an explicit flag and typed confirmation.
+Looking at the result and then changing the prompt spends them
+permanently.
+
+- cookiecutter-3
+- cookiecutter-4
+- luigi-2
+- sanic-1
+- sanic-2
+- spacy-1
+- tqdm-1
+- tqdm-2
+- tqdm-3
+- youtube-dl-2

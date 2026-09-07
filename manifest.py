@@ -70,7 +70,7 @@ def main():
              f"**{len(entries)} instances — {len(practice)} practice, "
              f"{len(locked)} locked.**", "",
              "| Instance | Python | Files | Lines | Pile |", "|---|---|---|---|---|"]
-    for k in entries:
+    for _, k in entries:
         lines.append(f"| {k['instance']} | {k.get('python_used','?')} | "
                      f"{k.get('size_files',0)} | {k.get('size_lines',0)} | "
                      f"{k['pile']} |")
