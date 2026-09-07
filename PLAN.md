@@ -287,8 +287,44 @@ inside it, so that is what gets measured.
   four fields are a first guess. Labelling every part before retrieval has been
   shown to work locks in a format that has never been tested, and relabelling is
   the whole bill again.
-- **OPEN - needs Luke's call:** whether to label a small batch first to settle
-  the format, or label everything up front.
+- **Label a small batch first, not everything.** Decided by Luke 2026-09-07.
+  The four fields are an untested guess, and labelling at scale before
+  retrieval has been shown to work locks in a format that would then cost the
+  whole run again to change.
+- **Mine 20 and judge them before mining more.** Luke, 2026-09-07, same
+  discipline: do not build a library on extraction nobody has looked at.
+
+### Mining quality, measured by hand on 20 parts (2026-09-07)
+
+Three rounds of hand-scoring moved usable parts from **13/20 to 15/20**. Each
+round found a different dominant dud, and none of them was guessable up front:
+
+1. **Fixes that only touch the project's own tests** (3 of the first 7 duds) -
+   housekeeping, not a solved problem. A fix touching source *and* test is the
+   best kind there is, since the test is the proof; test-only is worthless.
+2. **Typing churn** ("Fix typing", "fix pyright findings", "Fix issues
+   previously type ignored") became dominant once the test-only ones were gone.
+   Changes annotations, not behaviour.
+3. **Docs and packaging** - `docs/conf.py` slipped through an exclusion that
+   named only `conftest.py`.
+
+**The finding that matters is none of those.** Repo choice dominates filter
+tuning:
+
+| source | usable of 10 | ship a test with the fix |
+|---|---|---|
+| `psf/requests` | 9-10 | 7 |
+| `pallets/click` | 5-6 | 3 |
+
+Three rounds of blocklist tuning bought 10 percentage points; picking requests
+over click buys 35. Mature libraries where "fix" means a real defect are worth
+far more than clever filtering, and further blocklist tuning on a 20-part
+sample would be fitting to noise. **So the next lever is the source list, not
+the filters.**
+
+Also worth carrying forward: **"ships a test alongside the fix" is a free
+quality signal** and tracked per part as `has_test`. Those parts come with
+the original project's own proof of what the fix was for.
 
 ## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
