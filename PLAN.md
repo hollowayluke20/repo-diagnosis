@@ -15,7 +15,7 @@ changed repository plus evidence that holds up: every claimed improvement backed
 by something that demonstrably failed before and passes now, and everything
 unproven labelled a suggestion rather than a result.
 
-status: proposed
+status: agreed
 
 ## Hard constraints
 
