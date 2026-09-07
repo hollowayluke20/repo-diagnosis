@@ -133,8 +133,18 @@ def run_sealed(repo_dir, command, timeout_seconds=120, log=print,
         python_exe = os.path.join(RUNTIME_DIR, "python.exe")
         full_command = command.replace("python", f'"{python_exe}"', 1)
 
+        # An allowlist, not a filtered copy of the host's environment. The host
+        # environment carries API keys and account paths; a denylist would leak
+        # every variable we failed to think of, so nothing is inherited at all
+        # and the few Windows needs are named here.
+        #
+        # LOCALAPPDATA is required: without it the container refuses to start
+        # with error 203, because Windows redirects that path into the
+        # container's own storage as the process launches. It is a path, not a
+        # secret, and the container cannot read the real folder behind it.
         environment = {
             "SystemRoot": os.environ.get("SystemRoot", r"C:\Windows"),
+            "LOCALAPPDATA": os.environ.get("LOCALAPPDATA", ""),
             "PATH": RUNTIME_DIR,
             "TEMP": work_temp,
             "TMP": work_temp,

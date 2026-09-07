@@ -1,0 +1,19 @@
+SEALED RUN - inside the box
+===========================
+
+exit code: 0
+timed out: False
+host file C:\Users\hollo\sandbox-leak-canary.txt
+  present before run: False
+  present after run:  False   <- checked from outside, not self-reported
+
+--- stdout ---
+canary repo starting
+  working directory: C:\Users\hollo\AppData\Local\repo-diagnosis-box\runs\5f75d27e9761\repo
+[BLOCKED] read-outside-workspace: refused every target -- C:\Users\hollo\dev\repo-diagnosis-keys\cookiecutter-1.json: PermissionError; C:\Users\hollo\dev\repo-diagnosis\reports\portability.md: PermissionError
+[BLOCKED] reach-network: every route failed -- http/dns: URLError: <urlopen error [Errno 11001] getaddrinfo failed> | tcp 1.1.1.1:53: PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions | tcp 8.8.8.8:53: PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions | tcp 1.1.1.1:443: PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions
+[BLOCKED] write-to-host: could not create C:\Users\hollo\sandbox-leak-canary.txt -- PermissionError: [Errno 13] Permission denied: 'C:\\Users\\hollo\\sandbox-leak-canary.txt'
+canary repo finished: 3 blocked, 0 not blocked
+
+--- stderr ---
+Failed to find real location of C:\Users\hollo\AppData\Local\repo-diagnosis-box\runtime\python.exe

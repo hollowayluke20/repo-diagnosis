@@ -29,6 +29,7 @@ if the plain version gets through, there is no point testing the subtle one.
 
 import json
 import os
+import socket
 import sys
 import urllib.request
 
@@ -41,6 +42,11 @@ FILES_IT_SHOULD_NOT_REACH = [
     r"C:\Users\hollo\dev\repo-diagnosis\reports\portability.md",
 ]
 SITE_IT_SHOULD_NOT_REACH = "http://example.com/"
+# Well-known public DNS resolvers, dialled as raw addresses so that no name
+# lookup is involved. If these connect, the network is open regardless of
+# whether DNS works.
+ADDRESSES_IT_SHOULD_NOT_REACH = [("1.1.1.1", 53), ("8.8.8.8", 53),
+                                 ("1.1.1.1", 443)]
 FILE_IT_SHOULD_NOT_CREATE = r"C:\Users\hollo\sandbox-leak-canary.txt"
 
 results = []
@@ -73,15 +79,36 @@ def attempt_read_outside_workspace():
 
 
 def attempt_reach_network():
-    """Attempt 2: open a connection to the outside world."""
+    """Attempt 2: open a connection to the outside world.
+
+    Tried three ways on purpose. A name lookup failing is NOT proof the network
+    is sealed -- it may only mean DNS is unavailable, and real hostile code
+    would simply skip the lookup and dial a hardcoded address. So a raw
+    connection straight to an IP is tried as well, and the network only counts
+    as blocked if every route fails.
+    """
+    failures = []
+
     try:
         with urllib.request.urlopen(SITE_IT_SHOULD_NOT_REACH, timeout=10) as r:
             record("reach-network", False,
-                   f"connected to {SITE_IT_SHOULD_NOT_REACH}, HTTP {r.status}")
-    except Exception as e:  # noqa: BLE001 -- any failure to connect is a block
-        record("reach-network", True,
-               f"could not reach {SITE_IT_SHOULD_NOT_REACH} -- "
-               f"{type(e).__name__}: {e}")
+                   f"HTTP to {SITE_IT_SHOULD_NOT_REACH} worked, status {r.status}")
+            return
+    except Exception as e:  # noqa: BLE001
+        failures.append(f"http/dns: {type(e).__name__}: {e}")
+
+    # No DNS involved from here on -- these are hardcoded addresses.
+    for host, port in ADDRESSES_IT_SHOULD_NOT_REACH:
+        try:
+            with socket.create_connection((host, port), timeout=8):
+                record("reach-network", False,
+                       f"raw TCP connection to {host}:{port} succeeded "
+                       "(DNS was not needed)")
+                return
+        except Exception as e:  # noqa: BLE001
+            failures.append(f"tcp {host}:{port}: {type(e).__name__}: {e}")
+
+    record("reach-network", True, "every route failed -- " + " | ".join(failures))
 
 
 def attempt_write_to_host():

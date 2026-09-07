@@ -1,0 +1,36 @@
+{
+  "control_run_proves_the_attacks_work": true,
+  "unsealed": {
+    "attempts_that_succeeded": [
+      "read-outside-workspace",
+      "reach-network",
+      "write-to-host"
+    ],
+    "host_file_created": true,
+    "host_file_removed_afterwards": true
+  },
+  "sealed": {
+    "attempts_blocked": [
+      "read-outside-workspace",
+      "reach-network",
+      "write-to-host"
+    ],
+    "host_file_created": false,
+    "timed_out": false,
+    "workspace_destroyed": true,
+    "container_sid": "S-1-15-2-1425731731-4128844799-32316335-852443145-4126692947-3834326023-2521663646"
+  },
+  "detail": {
+    "unsealed": {
+      "read-outside-workspace": "[NOT BLOCKED] read-outside-workspace: opened C:\\Users\\hollo\\dev\\repo-diagnosis-keys\\cookiecutter-1.json and read: '{   \"project\": \"cookiecutter\",   \"bug_id\": \"1\",   \"instance\": \"cookiecutter-1\",   \"status\": \"VALID\",'",
+      "reach-network": "[NOT BLOCKED] reach-network: HTTP to http://example.com/ worked, status 200",
+      "write-to-host": "[NOT BLOCKED] write-to-host: created C:\\Users\\hollo\\sandbox-leak-canary.txt"
+    },
+    "sealed": {
+      "read-outside-workspace": "[BLOCKED] read-outside-workspace: refused every target -- C:\\Users\\hollo\\dev\\repo-diagnosis-keys\\cookiecutter-1.json: PermissionError; C:\\Users\\hollo\\dev\\repo-diagnosis\\reports\\portability.md: PermissionError",
+      "reach-network": "[BLOCKED] reach-network: every route failed -- http/dns: URLError: <urlopen error [Errno 11001] getaddrinfo failed> | tcp 1.1.1.1:53: PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions | tcp 8.8.8.8:53: PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions | tcp 1.1.1.1:443: PermissionError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions",
+      "write-to-host": "[BLOCKED] write-to-host: could not create C:\\Users\\hollo\\sandbox-leak-canary.txt -- PermissionError: [Errno 13] Permission denied: 'C:\\\\Users\\\\hollo\\\\sandbox-leak-canary.txt'"
+    }
+  },
+  "seal_holds": true
+}

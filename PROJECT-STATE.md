@@ -56,6 +56,23 @@ with all 127 of its own tests still passing; httpie found and fixed one in a
 project it had never seen; and the phantom control - told a defect existed
 where none did - refused and changed nothing.
 
+**Still-runs (portability), full corpus, 2026-09-07:** 33 of 33 instances
+checked, comparing each one's own test suite on its original Python against a
+freshly-provisioned current Python.
+
+| | |
+|---|---|
+| BROKEN | **11** - a real, present-day break on current Python |
+| PORTABLE | 5 - nothing that worked before stopped working |
+| NOT_APPLICABLE | 17 - the instance's own baseline could not run at all, for reasons unrelated to Python version, so no claim is made |
+
+All 11 BROKEN instances trace to one root cause: `pkg_resources`, which used
+to ship bundled with every Python install, is either missing from current
+setuptools or pinned as an uninstallable `pkg-resources==0.0.0` dependency -
+across 5 different projects (black, cookiecutter, luigi, sanic, tqdm). See
+`SCORING.md` for the worked example and `reports/portability.md` for the full
+table.
+
 ## What is finished
 
 - `build_instances.py` — its gate is proved: an instance built at the *fixed*
@@ -71,8 +88,9 @@ where none did - refused and changed nothing.
 
 ## What is half-built
 
-- **The batch has not been run.** 3 of 33 instances. Everything measured comes
-  from those three.
+- **The diagnosis batch has not been run.** 3 of 33 instances. Everything
+  measured on the bug-finding side comes from those three. (The portability
+  batch, a separate check, has now been run on all 33 - see above.)
 - **Speed and the two newest quality checks** (docs-match-behaviour,
   installs-cleanly) are decided but not built.
 - The `--phantom` control needs a harder version.
@@ -95,6 +113,13 @@ none of them threw an error:
 5. **The builder rejected 17 good instances** through four separate bugs —
    assuming one test runner, a cleanup check that was too strict, a missing
    dependency, and error reporting that returned separator bars.
+6. **The portability checker misread a passing test as an unusable baseline.**
+   Its regex required a pass/fail count to sit immediately before the "in
+   Xs" time footer, but pytest inserts a warnings clause between them ("1
+   passed, 2 warnings in 0.33s"), so a real pass was read as "could not run
+   at all" - a false NOT_APPLICABLE on tqdm-1, caught by testing on a handful
+   of real instances before trusting the full batch. Fixed: the count and the
+   time footer are matched separately rather than as one contiguous pattern.
 
 ## Not in this repo
 

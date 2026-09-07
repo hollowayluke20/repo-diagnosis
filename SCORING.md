@@ -177,9 +177,39 @@ For a given instance:
 
 ## Worked example
 
-*(Filled in with a real run from the corpus — not invented — once
-`check_still_runs.py` has been run. See `reports/portability.md` for the
-live version of this table.)*
+From the full-corpus run on 2026-09-07 (`reports/portability.md`).
+
+**black-1**
+
+- OLD run (the Python the instance was built with): 1 test failed. Collected
+  and ran fine otherwise.
+- NEW run (a fresh current Python, same declared dependencies reinstalled):
+  could not even start. `ModuleNotFoundError: No module named 'pkg_resources'`.
+- **BROKEN.** `pkg_resources` used to ship bundled with setuptools/pip on
+  every Python install; current setuptools stopped including it by default.
+  black never declared it as an explicit dependency because it never had to -
+  it worked by accident, and current Python breaks that accident.
+
+**tornado-1**
+
+- OLD run: 1 test failed.
+- NEW run: 1 test failed. Same count.
+- **PORTABLE.** Nothing that worked before stopped working.
+
+**httpie-1**
+
+- OLD run: could not collect at all - `ImportError while loading conftest`,
+  a pre-existing problem with the instance's own test setup, unrelated to
+  Python version.
+- **NOT_APPLICABLE.** There is no working baseline to compare against, so no
+  portability claim is made either way.
+
+Full-corpus result (33 instances, 2026-09-07): 11 BROKEN, 5 PORTABLE, 17
+NOT_APPLICABLE. Of the 11 BROKEN, all 11 trace to the same root cause -
+`pkg_resources` either missing from current setuptools or pinned as an
+uninstallable `pkg-resources==0.0.0` dependency - across 5 different
+projects (black, cookiecutter, luigi, sanic, tqdm). One real, fixable defect
+class, not 11 unrelated ones.
 
 ## Ensuring this can fail
 

@@ -1,0 +1,19 @@
+UNSEALED RUN - no box, code runs as you do
+==========================================
+
+exit code: 0
+timed out: False
+host file C:\Users\hollo\sandbox-leak-canary.txt
+  present before run: False
+  present after run:  True   <- checked from outside, not self-reported
+
+--- stdout ---
+canary repo starting
+  working directory: C:\Users\hollo\dev\repo-diagnosis\sandbox\canary-repo
+[NOT BLOCKED] read-outside-workspace: opened C:\Users\hollo\dev\repo-diagnosis-keys\cookiecutter-1.json and read: '{   "project": "cookiecutter",   "bug_id": "1",   "instance": "cookiecutter-1",   "status": "VALID",'
+[NOT BLOCKED] reach-network: HTTP to http://example.com/ worked, status 200
+[NOT BLOCKED] write-to-host: created C:\Users\hollo\sandbox-leak-canary.txt
+canary repo finished: 0 blocked, 3 not blocked
+
+--- stderr ---
+(nothing)
