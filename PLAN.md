@@ -223,7 +223,7 @@ neither should delay Parts 1-3 — but the end goal is the whole brief, not a
 prototype, and this part is where the rest of it lands.*
 
 ## Stage 16: The Auditor
-Four kinds of improvement that can be proved rather than argued:
+Six kinds of improvement that can be proved rather than argued:
 
 - **Security** — a dependency with a publicly known hole either has it or does
   not. Cheap, objective, and needs no AI.
@@ -233,6 +233,18 @@ Four kinds of improvement that can be proved rather than argued:
   have nothing to time, so a benchmark has to be written, and then part of what
   is being measured is our own benchmark.
 - **Dead code** — delete it, the tests still pass.
+- **Does what its documentation claims** - the README says this returns a
+  list; run it, it returns a generator. The provable slice of functional
+  suitability: you cannot check whether software does what a user wanted, but
+  you can check whether it does what it says about itself.
+- **Installs cleanly from scratch** - the provable slice of compatibility.
+  Projects routinely import something they forgot to declare; it works on the
+  author's machine and nowhere else. Install in a clean environment with only
+  what it declares, and run it. Seen live: luigi failed exactly this way
+  during corpus building.
+
+Usability is excluded outright: for a library it means whether the design
+is pleasant, which is taste with no test behind it.
 
 "A smarter way to do this" has no proof available and ships as *proposed*,
 never *proven*. Metrics that score how tangled code is are guesses about

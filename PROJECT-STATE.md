@@ -1,118 +1,84 @@
 # Project state
 
-Written 2026-09-07, from the code in this folder. Deliberately written without
-opening `BUILD-TASK.md`, `keys/`, or `subject-staging/` — those hold the answers
-to the experiment this repo runs, and reading them would defeat the point.
+Last updated end of 2026-09-07.
 
-## What this actually does
+## What this is
 
-It measures how well an AI finds bugs in code it has never seen, and tries to do
-it honestly rather than impressionistically.
+A harness that measures how well an AI finds bugs in code it has never seen,
+and — as of today — whether it can fix them. See `README.md` for how to run it,
+`PLAN.md` for where it is going, `SCORING.md` for how results are judged.
 
-The method is an exam with a marked answer sheet:
+## Where it stands
 
-1. Take a real open-source project and rewind it to a point in its history where
-   it contained a bug someone later fixed.
-2. Strip out everything that would give the answer away — the version history,
-   and the test that was added alongside the fix.
-3. Hand that folder to an AI agent that knows nothing about it, and ask what is
-   wrong with the code.
-4. Compare what it reports against the answer, which is kept in a separate
-   folder the agent cannot reach.
+**The measuring half works end to end.** Build the exam papers, sit the AI down
+with the answers out of reach, mark it automatically by running the proof
+scripts it supplies.
 
-The bugs and their answers come from **BugsInPy**, a published dataset of real
-bugs in real Python projects. It is downloaded, not written here.
+**The fixing half has been demonstrated once**, on three projects, and it
+worked twice with one honest refusal.
 
-## The scripts
+| | |
+|---|---|
+| Corpus | **33 instances**, 11 projects, 23 practice / 10 held back |
+| Diagnosis | works; every finding must ship a runnable reproduction |
+| Scoring | automatic — reproductions are executed, not read |
+| Fixing | demonstrated on 3 projects |
+| Product itself | **nothing built** |
 
-**`build_instances.py`** — builds the exam papers. For each bug it clones the
-project at the buggy commit, deletes `.git` (the fixing commit lives in that
-history), works out which Python version the project needs and copies a real
-interpreter *inside* the instance folder, then installs its dependencies.
+## Results so far
 
-Its most important part is the **validation gate**: it runs the bug's own test
-and requires it to *fail*. An instance whose bug has not been proved to
-reproduce does not enter the corpus. Without that, a broken instance and a
-genuine miss look identical, and the score ends up measuring how well the corpus
-was built.
+Numbers are from **three projects**, which is not yet evidence.
 
-There is a wrinkle it handles: the test that proves the bug was usually **added
-by the fix**, so it does not exist on the buggy commit. The script overlays that
-test temporarily to validate, then removes it again — because such a test's own
-name routinely states the bug outright.
+- 6 findings, **all confirmed real** by running their reproductions
+- 1 of 3 was the bug the dataset catalogued
+- black: fixed a real bug in 1 attempt, all 127 of its own tests still passing
+- httpie: found and fixed a bug on a project it had never seen, 1 attempt
+- phantom (told a bug existed where none did): **refused and changed nothing**,
+  correctly identifying the test as the problem
 
-**`run_diagnosis.py`** — sits the exam. Sends the prompt to each valid instance
-using `codex exec` headlessly. Several flags are load-bearing rather than
-decorative, and the comments in the file say why. Two guards refuse to run
-rather than warn:
-
-- it will not start unless internet search is disabled for the agent
-- it will not touch the held-back instances without an explicit flag, and then
-  demands typed confirmation
-
-**`score.py`** — marks the paper, in two stages. Stage one is automatic and
-cheap: a finding that names a file the bug is not in cannot be the bug, so most
-findings are dismissed for free. Stage two — whether a described trigger would
-actually produce the known failure — is **deliberately left to a human**.
-Guessing it automatically would invent a score.
-
-**`findings-schema.json`** — forces the agent to answer in a fixed shape, so
-results are data rather than prose. An empty result is explicitly allowed:
-"I found nothing" has to remain a legitimate answer, or the false-alarm number
-becomes meaningless.
-
-**`prompts/diagnosis-v3.txt`** — the instructions given to the agent under test.
-Version 3. It asks for three separate passes: the structure of the code, the
-*type* of data arriving, and the *content* of that data.
+The phantom test was easier than it should be — the script announced itself.
+A harder version would import the module, do real work, and fail subtly.
 
 ## What is finished
 
-- `build_instances.py` — working and proved. Its rejection gate has been tested
-  by deliberately building an instance that should fail validation, and it did.
-- `run_diagnosis.py` — working end to end. Both guards have been tested by
-  breaking them on purpose and watching them refuse.
-- `findings-schema.json` — done.
-- The prompt — v3, in use.
+- `build_instances.py` — its gate is proved: an instance built at the *fixed*
+  commit is rejected
+- `run_diagnosis.py` — three guards, each proved by breaking it on purpose:
+  refuses without the internet block, refuses held-back instances, warns if the
+  prompt arrives truncated
+- `score.py` — runs reproductions, reports catch rate and confirmation rate
+- `fix_bug.py` — works on a copy, before-and-after test baseline, `--phantom`
+- `manifest.py`, `check_prompt_sync.py`, `progress_marker.py`
 
 ## What is half-built
 
-- **`score.py`** produces stage one only. Stage two being manual is a design
-  decision, not an omission, but it does mean **no catch rate or false-alarm
-  rate is computed anywhere in this repo yet.** Those numbers currently live in
-  a scoring sheet kept outside this folder.
-- **The corpus.** `instances/` holds 28 built instances but a batch build was
-  still running when this was written, and a known bug in the builder's
-  post-validation cleanup check has been wrongly rejecting instances where the
-  bug's test already existed on the buggy commit. That is not yet fixed.
-- **`results/`** contains exactly one run. The batch has not been executed.
+- **The batch has not been run.** 3 of 33 instances. Everything measured comes
+  from those three.
+- **Speed and the two newest quality checks** (docs-match-behaviour,
+  installs-cleanly) are decided but not built.
+- The `--phantom` control needs a harder version.
 
-## What is only a stub, or looks abandoned
+## Bugs found in this harness today, all now fixed
 
-These were all throwaway probes written to answer one question and never
-revisited. None are referenced by the three real scripts:
+Kept because every one of them produced confident, plausible, wrong output and
+none of them threw an error:
 
-- `smoke_out.json`, `smoke2.json`, `smoke5.json` — output from testing whether
-  the agent CLI could run headlessly and whether its internet access could be
-  switched off. Three near-identical files; only the last was informative.
-- `schema_test.json` — a two-field throwaway schema used for those smoke tests.
-  Superseded by `findings-schema.json`.
-- `probe.json` — output from one more permissions test.
-- `lint_probe.py` — a six-line file written to check exactly when an off-the-
-  shelf linter's rule fires and when it silently does not.
-
-`prompts/` contains both `diagnosis-v3.txt` and `diagnosis-v3-source.md`. The
-`.txt` is what the runner actually reads; the `.md` is the same content with
-formatting. **They can drift apart, and nothing checks that they agree.**
-
-`reports/build.log` is a live log from the batch build that was in progress at
-the time of the commit, so it is captured mid-write.
+1. **Prompts were truncated at the first newline** passing through npm's `.CMD`
+   shim. Every automated run received one sentence. Fixed: stdin, plus a canary
+   that shouts if the tail of the prompt is missing from the log.
+2. **The prompt file was corrupted** — every em dash had become a replacement
+   character. Fixed: rewritten in ASCII, with a check that fails on any
+   non-ASCII character.
+3. **The scorer counted a matching filename as a catch**, turning 1-of-3 into a
+   fake 100%. Fixed: a finding must land where the real fix landed.
+4. **The answer keys were reachable** from inside every instance at `../../keys`.
+   Fixed: they now live outside the repository entirely.
+5. **The builder rejected 17 good instances** through four separate bugs —
+   assuming one test runner, a cleanup check that was too strict, a missing
+   dependency, and error reporting that returned separator bars.
 
 ## Not in this repo
 
-`subject/` is a **sibling folder** (`C:\Users\hollo\dev\subject`), not part of
-this repository. It holds a single hand-built instance from before the harness
-existed.
-
-`instances/`, `BugsInPy/` and `src/` are excluded from version control — see
-`.gitignore` for what each is and why. All three are reproducible or downloaded;
-none contain anything written for this project.
+`keys/` and the run history live in `../repo-diagnosis-keys/`, outside this
+repository on purpose. `instances/`, `BugsInPy/`, `src/` and `fixes/` are
+excluded from git — see `.gitignore`.
