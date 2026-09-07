@@ -20,12 +20,21 @@ Deliberately NOT told to avoid breaking other things. We want to find out
 whether it checks its own work unprompted, since on a real submission nobody
 is there to remind it.
 
+--library switches on the store: matching fix shapes from library/ and
+database/ are offered in the prompt as candidate approaches. This is the half
+of Stage 13's on/off check that is switched ON - see ab_fix.py, which runs both
+halves and compares them. Nothing here decides whether the store helps; it only
+makes the two runs differ in exactly one respect.
+
 Usage:
   python fix_bug.py --instance cookiecutter-1 --finding 1
   python fix_bug.py --instance cookiecutter-1 --finding 1 --phantom
+  python fix_bug.py --instance cookiecutter-1 --finding 1 --library
 """
 import argparse, json, shutil, subprocess, sys
 from pathlib import Path
+
+import library
 
 ROOT = Path(__file__).parent.resolve()
 INSTANCES, RESULTS = ROOT / "instances", ROOT / "results"
@@ -56,7 +65,7 @@ your work.
 
 If you cannot fix it, say so plainly and change nothing. An honest "I could not
 do this" is a better answer than a change you do not believe in.
-"""
+{library}"""
 
 FIX_SCHEMA = {
     "type": "object", "additionalProperties": False,
@@ -68,6 +77,23 @@ FIX_SCHEMA = {
         "why_it_works": {"type": "string"},
     },
 }
+
+
+def schema_for(with_library):
+    """With the store switched on, the fixer must say which idea it used.
+
+    Without this the credit for a successful fix smears across every entry that
+    happened to be offered, and "worked" stops meaning anything - which is the
+    one tally that promotes an entry to the database.
+    """
+    s = json.loads(json.dumps(FIX_SCHEMA))
+    if with_library:
+        s["properties"]["library_entry_used"] = {
+            "type": "string",
+            "description": "The [id] of the offered approach you actually used, "
+                           "or an empty string if you used none of them."}
+        s["required"] = s["required"] + ["library_entry_used"]
+    return s
 
 
 def sh(cmd, cwd=None, timeout=900, prompt=None):
@@ -119,6 +145,9 @@ def main():
     ap.add_argument("--finding", type=int, default=1)
     ap.add_argument("--phantom", action="store_true",
                     help="invent a defect that is not there, and see what it does")
+    ap.add_argument("--library", action="store_true",
+                    help="offer matching fix shapes from library/ and database/. "
+                         "This is the ON half of the Stage 13 on/off check.")
     a = ap.parse_args()
 
     inst = INSTANCES / a.instance
@@ -126,7 +155,8 @@ def main():
     res = json.loads((RESULTS / a.instance / "result.json").read_text(encoding="utf-8"))
     finding = res["findings"][a.finding - 1]
 
-    tag = f"{a.instance}-f{a.finding}" + ("-phantom" if a.phantom else "")
+    tag = (f"{a.instance}-f{a.finding}" + ("-phantom" if a.phantom else "")
+           + ("-lib" if a.library else ""))
     work = FIXES / tag
     if work.exists():
         shutil.rmtree(work, ignore_errors=True)
@@ -163,10 +193,20 @@ def main():
                 "What goes wrong: the module mishandles its input under some "
                 "conditions and _repro.py demonstrates it.")
 
+    # --- the store, if it is switched on ---
+    hits = []
+    if a.library:
+        hits = library.search(library.query_from_finding(finding), limit=3)
+        print(f"library: {len(hits)} candidate(s)"
+              + (" - " + ", ".join(e["id"] for e, _, _ in hits) if hits else
+                 " (nothing matched; this run is identical to --library off)"))
+        library.record_retrieved(hits)
+
     schema_path = ROOT / "_fix_schema.json"
-    schema_path.write_text(json.dumps(FIX_SCHEMA), encoding="utf-8")
+    schema_path.write_text(json.dumps(schema_for(a.library)), encoding="utf-8")
     out_path = work / "_fix_result.json"
-    prompt = FIX_PROMPT.format(finding=desc, max_attempts=MAX_ATTEMPTS)
+    prompt = FIX_PROMPT.format(finding=desc, max_attempts=MAX_ATTEMPTS,
+                               library=library.as_prompt_section(hits))
     (work / "_fix_prompt.txt").write_text(prompt, encoding="utf-8")
 
     print("running the fixer ...", flush=True)
@@ -192,16 +232,43 @@ def main():
     print("  project tests:   ", after_tests)
     print("  files it touched:", changed or "none")
 
+    # Stage 7's proof, both halves: the failure is gone AND nothing else broke.
+    # Either half alone is passed perfectly by deleting the feature.
+    proof_passed = (rc_r2 == 0) and (before_tests == after_tests)
+
     verdict = {
         "instance": a.instance, "finding": a.finding, "phantom": a.phantom,
+        "library_enabled": a.library,
+        "library_offered": [e["id"] for e, _, _ in hits],
+        "library_entry_used": claim.get("library_entry_used", ""),
         "claimed_fixed": claim.get("fixed"), "attempts": claim.get("attempts"),
         "what_i_changed": claim.get("what_i_changed", "")[:500],
         "repro_before": before_repro, "repro_after_passes": rc_r2 == 0,
         "tests_before": before_tests, "tests_after": after_tests,
         "tests_still_ok": (before_tests == after_tests),
+        "proof_passed": proof_passed,
         "files_changed": changed,
         "real_fix_touched": key.get("files", []),
     }
+
+    # Credit ONE entry, and only for a fix that actually passed the proof.
+    # Being offered is popularity; this is the tally that promotes.
+    used = (claim.get("library_entry_used") or "").strip().strip("[]")
+    if a.library and used and proof_passed:
+        offered = [e["id"] for e, _, _ in hits]
+        if used not in offered:
+            # it named something it was never shown - record, do not credit
+            verdict["library_credit_refused"] = (
+                f"claimed '{used}' which was not among {offered}")
+        else:
+            entry, promoted = library.record_worked(used, a.instance)
+            verdict["library_credited"] = used
+            verdict["library_promoted_to_database"] = promoted
+            print(f"  credited [{used}] - worked on "
+                  f"{len(entry['proven_on'])}/{library.PROVEN_BAR} repos"
+                  + ("  ** PROMOTED TO DATABASE **" if promoted else ""))
+    elif a.library and used and not proof_passed:
+        verdict["library_credit_refused"] = "proof did not pass"
     REPORTS.mkdir(exist_ok=True)
     p = REPORTS / f"fix-{tag}.json"
     p.write_text(json.dumps(verdict, indent=2), encoding="utf-8")
