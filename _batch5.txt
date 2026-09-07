@@ -1,0 +1,5 @@
+httpie-2
+youtube-dl-1
+tornado-2
+fastapi-2
+spacy-3

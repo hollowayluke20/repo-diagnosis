@@ -115,3 +115,88 @@ that is our own instances and a known agent, which is acceptable. It stops being
 acceptable the moment anything from the public internet is involved — that is
 what the sealed workspace stage exists for, and this file should be revisited
 when it lands.
+
+---
+
+# PART 2 — "Still runs" quality check (Stage 6)
+
+*Detects when a project that worked on its author's machine breaks on current
+language versions. This is provable and cheap, and invisible to the owner.*
+
+## What "still runs" means
+
+**Test suite passes (if tests exist) OR package imports without error (if no tests).**
+
+This is composite by necessity:
+- With tests: proof means the repository's own test suite passes end-to-end.
+- Without tests: proof means we can import the package without error.
+
+For repositories with no usable tests, the result is downgraded to *proposed*,
+matching the design principle in PLAN.md Stage 6.
+
+## How to measure it
+
+1. **Does the repository have tests?** Look for a test runner (pytest, unittest, etc.)
+   or a test directory.
+   - If yes: run `pytest` (or the project's own test command) and check exit code.
+   - If no: try `python -c "import <package_name>"` in the environment.
+
+2. **Record both signals always:**
+   - Tests exist: yes/no
+   - Tests pass: yes/no/not-run (if no tests)
+   - Import succeeds: yes/no
+
+3. **Scoring:**
+   - If tests exist and pass → **PROVEN**
+   - If tests exist and fail → **BROKEN** (the fix must not have made it worse)
+   - If no tests exist and import succeeds → **PROPOSED** (downgraded, because we
+     haven't proved the whole thing works)
+   - If no tests exist and import fails → **BROKEN**
+
+## Worked example
+
+**Project: requests (a real library with tests)**
+
+Before fix attempt:
+```
+$ pytest
+FAILED tests/test_requests.py::test_get (urllib3 incompatibility)
+1 failed in 2.34s
+```
+Result: BROKEN
+
+After applying a Python 3.10 compatibility fix:
+```
+$ pytest
+passed 153 in 8.2s
+```
+Result: PROVEN
+
+---
+
+**Project: a small utility with no tests**
+
+Before:
+```
+$ python -c "import myutil"
+# (no error)
+```
+Result: PROPOSED (no test suite to prove it, import only)
+
+After a breaking change (dependency upgrade removed a function):
+```
+$ python -c "import myutil"
+ModuleNotFoundError: cannot import name 'removed_function' from 'urllib3'
+```
+Result: BROKEN
+
+## Ensuring this can fail
+
+To verify the check works, deliberately break it:
+
+1. **Inject a syntax error** into the main module and rerun — import should fail.
+2. **Remove a core dependency** from the environment and rerun — import or tests
+   should fail.
+3. **Add a failing test** to a repo that currently passes — tests should fail.
+
+All three must be caught by the check before any code runs.

@@ -57,6 +57,10 @@ def main():
     ap.add_argument("--locked", action="store_true",
                     help="run the held-back pile. One look spends it.")
     ap.add_argument("--only", help="single instance name")
+    ap.add_argument("--control", action="store_true",
+                    help="run the CONTROL instances: same projects built at the "
+                         "commit where the bug was FIXED. Anything it reports "
+                         "about that bug is a provable false alarm.")
     a = ap.parse_args()
 
     if not shutil.which("codex"):
@@ -67,11 +71,19 @@ def main():
 
     pile = "locked" if a.locked else "practice"
     keys = [json.loads(p.read_text(encoding="utf-8")) for p in KEYS.glob("*.json")]
-    todo = [k for k in keys if k.get("status") == "VALID" and k.get("pile") == pile]
+    if a.control:
+        # controls are marked INVALID by the gate, correctly - their bug does
+        # not reproduce, which is the whole point of them
+        todo = [k for k in keys if k.get("built_at_fixed_commit")]
+    else:
+        todo = [k for k in keys if k.get("status") == "VALID"
+                and k.get("pile") == pile]
     if a.only:
         todo = [k for k in todo if k["instance"] == a.only]
     if not todo:
-        sys.exit(f"no VALID instances in the '{pile}' pile"
+        sys.exit(f"no instances to run"
+                 + (" (build controls with build_instances.py --fixed)"
+                    if a.control else f" in the '{pile}' pile")
                  + ("" if a.locked else " (locked ones need --locked)"))
 
     if a.locked:

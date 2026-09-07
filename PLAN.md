@@ -133,8 +133,14 @@ demonstrated without a human.*
 Before any judgement about a submitted repo, record whether it builds, whether
 it runs, whether it has tests, and whether those tests pass.
 
-Done when: every run emits that record, and the system refuses to report "no
-problems found" for any repo whose record shows it could not run anything.
+**SCORING RULE DECIDED 2026-09-07:** "Still runs" is defined as:
+test suite passes (if tests exist) OR package imports without error (if no tests).
+With tests → proven. Without tests → proposed (downgraded). Full rules with
+worked examples in SCORING.md.
+
+Done when: every run emits that record, the system refuses to report "no
+problems found" for any repo whose record shows it could not run anything, and
+the check catches deliberately broken code (syntax errors, missing deps, etc.).
 
 ## Stage 7: Prove a fix is better
 Given a repo, a defect and a candidate change, decide whether the repo is
