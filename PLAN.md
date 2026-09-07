@@ -193,6 +193,39 @@ producing a list. Plausible rubbish would have satisfied it. Searching is only
 worth anything if something found outside the repo actually fixes something
 inside it, so that is what gets measured.
 
+### Design decided 2026-09-07
+
+- **Two stores, never merged.**
+  - *The LIBRARY* — fixes mined from other projects' git histories. Large,
+    free, unverified. This is where the system goes looking.
+  - *The DATABASE* — patterns that have actually worked on a real repository,
+    with evidence attached. This is what makes the system smarter over time.
+  - A pattern moves library -> database by being **used and proven** (Stage 7
+    proof passed on a real instance), never by being found.
+- **An entry is a shape, not a diff.** Follows "take the idea, not the code":
+  ideas are not copyrightable, specific code is, and an idea transfers to
+  another codebase where a diff does not. Four fields:
+  `Problem` (what was wrong, in transferable terms) / `Fix shape` (the approach,
+  not the patch) / `Source` (project + commit) / `Status` (found | proven).
+- **Raw material.** `build_instances.py` already finds the commit that fixed a
+  bug and extracts its diff, then throws the fix away and keeps the broken
+  version. Point the same machinery the other way: keep the diff + message +
+  source as a library entry.
+- **Contamination firewall.** Two project lists that must never touch. The
+  mining list excludes every project named in `MANIFEST.md`. If the library
+  holds fixes from the projects the exam uses, the system has been handed the
+  answers and the catch rate rises for no real reason. The miner **refuses** a
+  corpus project rather than relying on anyone remembering.
+- **Integration point: the fixer.** When a defect is found, matching library /
+  database entries are retrieved and injected into the fix prompt as candidate
+  approaches. "Output" for the on/off check (Stage 13) is therefore the fix and
+  whether it passes Stage 7's proof.
+- **Build order.** The on/off check first (Stage 13), then the simplest store
+  that works — one small file per entry, in a folder, in git, plain keyword
+  search. Only reach for anything cleverer once simple matching can be **shown**
+  failing.
+- **OPEN - needs Luke's call:** which projects the miner draws fixes from.
+
 ## Stage 11: Make the fix
 Write the change into the repo — the idea taken from the source, the code
 written fresh for this codebase.
@@ -215,6 +248,21 @@ and apply it to later repositories.
 Done when: running the same repository twice — once with the database enabled,
 once without — produces measurably different output, and that difference is
 recorded.
+
+### Design decided 2026-09-07
+
+- **This check is built before the store, not after.** Storing entries is easy;
+  getting the right one back out is the whole difficulty, and a store you
+  cannot show is contributing is decoration however many entries it holds.
+- **What it does.** Run one instance through the fixer twice — once with
+  retrieved entries in the prompt, once without — and record, for each side:
+  did the fix pass Stage 7's proof (failure gone, project's own tests no worse),
+  how many attempts it took, and whether it landed where the real fix landed.
+- **The difference is the artefact.** Written to `reports/`. If enabling the
+  database changes none of those, that is the finding and it is recorded as
+  such.
+- **First run uses a hand-made library** of a few entries, before the miner
+  exists, so the A/B plumbing is proved on something cheap.
 
 ---
 
