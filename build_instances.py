@@ -8,7 +8,7 @@ Usage:
   python build_instances.py --bug cookiecutter/1 --bug thefuck/2
   python build_instances.py --bug cookiecutter/1 --fixed   # gate self-test
 """
-import argparse, json, os, random, re, shutil, subprocess, sys
+import argparse, json, os, random, re, shlex, shutil, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
@@ -82,19 +82,69 @@ def provision_python(version, dest):
     return None, f"no interpreter available (tried {tried})"
 
 
+def first_error(out, limit=300):
+    """The most informative line, not the last one.
+
+    Slicing the tail of pytest output reliably returns the end of a warnings
+    URL rather than the actual error, which hid the real cause of two
+    rejections.
+    """
+    # in priority order - the cause beats the symptom beats the banner
+    tiers = (("ModuleNotFoundError", "ImportError", "SyntaxError"),
+             ("E   ",),
+             ("error:", "unrecognized arguments"),
+             ("found no collectors", "no tests ran",
+              "file or directory not found"),
+             ("ERROR",))
+    lines = [l.strip() for l in out.splitlines() if l.strip()]
+    # drop pytest's ==== / ____ / !!!! separator bars, which is what the old
+    # tail-slicing kept returning instead of the actual error
+    lines = [l for l in lines if len(set(l)) > 3]
+    for tier in tiers:
+        for s in lines:
+            if any(m in s for m in tier):
+                return s[:limit]
+    return (lines[-1] if lines else out.strip())[:limit]
+
+
 def test_command(bug_dir, py):
-    """Turn BugsInPy's run_test.sh into something we can actually run."""
+    """Honour whichever runner BugsInPy specifies, rather than forcing pytest.
+
+    black, tornado and youtube-dl use `python -m unittest` with DOTTED MODULE
+    paths (tests.test_black.BlackTestCase.test_x), which pytest cannot accept
+    as a path at all. tqdm uses `python3`, not `python`. Assuming one runner
+    cost 12 instances.
+    """
     raw = (bug_dir / "run_test.sh").read_text(encoding="utf-8",
                                               errors="replace").strip()
     line = [l for l in raw.splitlines() if l.strip()][-1].strip()
-    # strip the runner word (tox / pytest / python -m pytest / unittest)
-    target = re.sub(r"^(tox|pytest|py\.test|python -m pytest|python -m unittest)\s*",
-                    "", line).strip()
-    # -o addopts= clears the project's own pytest flags (coverage plugins etc.
-    # that we have no reason to install); -p no:cacheprovider keeps the
-    # instance folder clean between runs.
-    return ([str(py), "-m", "pytest", target, "-x", "-q",
-             "-o", "addopts=", "-p", "no:cacheprovider"], line)
+    parts = shlex.split(line)
+
+    # drop a leading interpreter: python, python3, python3.8, and its -m
+    if parts and re.fullmatch(r"python\d*(\.\d+)?", parts[0]):
+        parts = parts[1:]
+        if parts[:1] == ["-m"]:
+            parts = parts[1:]
+    if not parts:
+        return [str(py), "-m", "pytest"], line
+
+    runner, args = parts[0], parts[1:]
+
+    if runner == "unittest":
+        # keep its own flags - they are unittest's, and it understands them
+        return [str(py), "-m", "unittest"] + args, line
+
+    if runner == "tox":
+        # tox is a wrapper that would rebuild its own environment; run the
+        # underlying test directly in the interpreter we provisioned
+        args = [a for a in args if not a.startswith("-")]
+    elif runner not in ("pytest", "py.test"):
+        args = parts
+
+    # -o addopts= clears the project's own pytest flags (coverage plugins we
+    # have no reason to install); -p no:cacheprovider keeps the folder clean.
+    return ([str(py), "-m", "pytest"] + args +
+            ["-x", "-q", "-o", "addopts=", "-p", "no:cacheprovider"], line)
 
 
 def build(spec, at_fixed=False):
@@ -176,8 +226,11 @@ def build(spec, at_fixed=False):
     # run 5 reported freezegun/pytest-mock/pytest-cov missing, so the project's
     # own suite could not fully run - the bug's requirements.txt does not cover
     # test extras. Failures here are non-fatal; the gate is what decides.
+    # nose is dead but several 2020-era suites still import it (tqdm does).
+    # Failures here are non-fatal - the validation gate is what decides.
     sh([str(py), "-m", "pip", "install", "--quiet", "pytest", "ruff",
-        "pytest-mock", "pytest-cov", "freezegun", "mock", "pytest-timeout"])
+        "pytest-mock", "pytest-cov", "freezegun", "mock", "pytest-timeout",
+        "nose", "parameterized", "pytest-asyncio"])
     for extra in ["requirements-dev.txt", "test_requirements.txt",
                   "requirements/test.txt", "dev-requirements.txt"]:
         if (inst / extra).exists():
@@ -194,15 +247,18 @@ def build(spec, at_fixed=False):
         key["invalid_reason"] = "test run timed out"
         return key
 
-    tail = out.strip()[-400:]
-    if "error" in out.lower() and "collected 0 items" in out.lower():
-        key["invalid_reason"] = "test could not be collected: " + tail
-    elif rc == 0:
+    low = out.lower()
+    could_not_run = any(s in low for s in (
+        "modulenotfounderror", "importerror", "no tests ran",
+        "file or directory not found", "found no collectors",
+        "collected 0 items", "unrecognized arguments", "usage: __main__.py"))
+    if rc == 0:
         key["invalid_reason"] = ("known test PASSED - bug does not reproduce here"
                                  + (" (expected: built at fixed commit)" if at_fixed else ""))
-    elif "no tests ran" in out.lower() or "ERROR" in out and "assert" not in out.lower():
-        key["invalid_reason"] = "test errored rather than failed: " + tail
+    elif could_not_run:
+        key["invalid_reason"] = "could not run the test: " + first_error(out)
     else:
+        # non-zero and it actually ran: the test failed, which is the point
         key["status"] = "VALID"
 
     # --- put the folder back to the buggy commit, then destroy the history ---
@@ -217,9 +273,12 @@ def build(spec, at_fixed=False):
         key["status"] = "INVALID"
         key["invalid_reason"] = "could not delete .git - history would leak"
         return key
-    # prove the overlay is gone: the named test must no longer be collectable
-    if overlaid:
-        rc2, out2 = sh(cmd + ["--collect-only"], cwd=str(inst), timeout=300)
+    # Prove the overlay is gone - but ONLY when the test did not exist on the
+    # buggy commit. When it did exist, restoring the original is correct and it
+    # is *supposed* to remain collectable; checking anyway rejected 4 perfectly
+    # good instances. Also pytest-only: --collect-only means nothing to unittest.
+    if overlaid and not existed_before and "pytest" in cmd:
+        rc2, _ = sh(cmd + ["--collect-only"], cwd=str(inst), timeout=300)
         key["overlay_removed_verified"] = (rc2 != 0)
         if rc2 == 0:
             key["status"] = "INVALID"
