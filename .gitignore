@@ -54,3 +54,7 @@ reports/portability_detail.json
 # and "take the idea, not the code" is not a policy if the code is committed.
 mining-cache/
 raw-parts/
+
+# labelling scratch dir
+_label_scratch/
+_label_schema.json

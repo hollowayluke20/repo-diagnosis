@@ -82,6 +82,7 @@ def _parse(path):
         "source_project": meta.get("source_project", ""),
         "source_commit": meta.get("source_commit", ""),
         "source_url": meta.get("source_url", ""),
+        "tags": [t for t in meta.get("tags", "").split(",") if t.strip()],
         "retrieved": int(meta.get("retrieved", "0") or 0),
         "worked": int(meta.get("worked", "0") or 0),
         "proven_on": [s for s in meta.get("proven_on", "").split(",") if s.strip()],
@@ -105,6 +106,7 @@ def _write(e):
             f"source_project: {e['source_project']}\n"
             f"source_commit: {e['source_commit']}\n"
             f"source_url: {e['source_url']}\n"
+            f"tags: {','.join(e['tags'])}\n"
             f"retrieved: {e['retrieved']}\n"
             f"worked: {e['worked']}\n"
             f"proven_on: {','.join(e['proven_on'])}\n"
@@ -158,7 +160,13 @@ def search(query, limit=3, entries=None):
         return []
     scored = []
     for e in (load_all() if entries is None else entries):
-        et = _tokens(e["problem"] + " " + e["id"].replace("-", " "))
+        # Problem text plus tags only. The FIX SHAPE is deliberately excluded:
+        # at search time we are holding a problem, and a problem description
+        # resembles another problem description, not a description of a cure.
+        # Matching symptoms against treatments is how retrieval quietly
+        # underperforms - so the fix rides along once found, and is never what
+        # the match is made on.
+        et = _tokens(e["problem"] + " " + " ".join(e["tags"]))
         overlap = qt & et
         if len(overlap) < MIN_OVERLAP:
             continue
