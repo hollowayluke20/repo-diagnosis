@@ -328,6 +328,34 @@ recorded.
 - **First run uses a hand-made library** of a few entries, before the miner
   exists, so the A/B plumbing is proved on something cheap.
 
+### Built 2026-09-07
+
+`library.py`, `ab_fix.py`, `check_library_clean.py`, `--library` on
+`fix_bug.py`, and three hand-written seed entries. Two folders, `library/` and
+`database/`; promotion is a literal file move, so the stores can be counted and
+cannot quietly merge.
+
+Proved by breaking on purpose, in this repo's usual manner: a planted
+cookiecutter-sourced entry is refused by `check_library_clean.py`, and
+promotion was shown to require three *different* repositories (two bugs in the
+same project correctly counted once).
+
+**Credit is attributed to one entry, not smeared.** With the store on, the
+fixer must name the `[id]` it actually used, and credit is refused if the fix
+did not pass the proof or if it names an entry it was never offered.
+
+**Already measured, before any fixer run: simple keyword search is noisy.**
+Across 15 real findings and 3 entries, single-word matches were junk without
+exception - a Windows CPU-count crash matched a text-encoding entry on
+"fallback"; an `IndexError` matched a path-traversal entry on "containing". A
+floor of two shared words removed those (10 of 15 findings still retrieve
+something). What remains is wrong *ranking*: a CRLF/decoding defect ranks the
+mutable-default entry above the encoding entry, on the words "one" and "whose".
+Recorded in `reports/retrieval-seed-probe.txt`. This is the "show simple
+matching failing" evidence the brief asks for, though it is not yet decisive -
+three hand-written entries is too small a library to conclude from, and it must
+be re-measured against mined entries.
+
 ---
 
 # PART 4 — Can anyone use it?
