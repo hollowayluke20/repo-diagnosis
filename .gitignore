@@ -37,3 +37,8 @@ src/
 # to live in this repo rather than in a sheet somewhere else.
 reports/verdicts.json
 reports/needs_judgement.json
+
+# working copies made by the fixer - each carries a full Python install, and
+# they are all reproducible from fix_bug.py
+fixes/
+_fix_schema.json
