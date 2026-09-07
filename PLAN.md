@@ -236,10 +236,9 @@ Unresolved by design, each with the evidence that would settle it.
   data, so a good score may mean the fix was memorised. Bugs fixed after the
   training cutoff are the only clean measure. *Settled by: comparing scores on
   well-known versus obscure instances.*
-- **What "finished" means to Alex.** The brief describes a company, and the
-  committed scope here is all five parts. Whether he expects that, or a working
-  demonstration of the thesis, changes how long Parts 4 and 5 are allowed to
-  take. *Settled by: asking him.*
+- **Scope is Luke's call, and it is made: all five parts.** The brief came from
+  Alex but the decision about how much of it gets built does not. Recorded here
+  so nobody re-opens it by going back to the brief and reading ambition into it.
 - **How long this gets.** Scope is the full brief with no stated deadline, and
   third year plus an existing daily newsletter are both live. *Settled by:
   putting a date on Part 2 specifically — if "better" cannot be proved by then,
