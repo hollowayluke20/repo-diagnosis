@@ -8,7 +8,8 @@ Usage:
   python build_instances.py --bug cookiecutter/1 --bug thefuck/2
   python build_instances.py --bug cookiecutter/1 --fixed   # gate self-test
 """
-import argparse, json, os, random, re, shlex, shutil, subprocess, sys
+import argparse, contextlib, json, os, random, re, shlex, shutil, subprocess, sys
+from progress_marker import progress_marker
 from pathlib import Path
 
 ROOT = Path(__file__).parent.resolve()
@@ -310,20 +311,25 @@ def main():
     KEYS.mkdir(exist_ok=True)
     REPORTS.mkdir(exist_ok=True)
     keys = []
-    for spec in a.bug:
-        print(f"--- building {spec}{' (FIXED commit)' if a.fixed else ''} ...",
-              flush=True)
-        try:
-            k = build(spec, a.fixed)
-        except Exception as e:
-            k = {"project": spec, "status": "INVALID",
-                 "invalid_reason": f"{type(e).__name__}: {e}"}
-        keys.append(k)
-        (KEYS / f"{k.get('instance', spec.replace('/', '-'))}.json").write_text(
-            json.dumps(k, indent=2), encoding="utf-8")
-        print(f"    {k['status']}"
-              + (f" - {k['invalid_reason']}" if k.get("invalid_reason") else "")
-              + (f" [{k.get('pile')}]" if k["status"] == "VALID" else ""))
+    marker = (progress_marker(f"instance build, {len(a.bug)} bugs",
+                              "instances/ and keys/",
+                              f"~{max(1, len(a.bug)*5//60)}h")
+              if len(a.bug) > 3 else contextlib.nullcontext())
+    with marker:
+     for spec in a.bug:
+         print(f"--- building {spec}{' (FIXED commit)' if a.fixed else ''} ...",
+               flush=True)
+         try:
+             k = build(spec, a.fixed)
+         except Exception as e:
+             k = {"project": spec, "status": "INVALID",
+                  "invalid_reason": f"{type(e).__name__}: {e}"}
+         keys.append(k)
+         (KEYS / f"{k.get('instance', spec.replace('/', '-'))}.json").write_text(
+             json.dumps(k, indent=2), encoding="utf-8")
+         print(f"    {k['status']}"
+               + (f" - {k['invalid_reason']}" if k.get("invalid_reason") else "")
+               + (f" [{k.get('pile')}]" if k["status"] == "VALID" else ""))
 
     valid = [k for k in keys if k["status"] == "VALID"]
     lines = ["# Rejection report", "",

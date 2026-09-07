@@ -9,8 +9,10 @@ Usage:
   python run_diagnosis.py                  # practice pile
   python run_diagnosis.py --locked         # the held-back set. Think first.
 """
-import argparse, json, shutil, subprocess, sys
+import argparse, contextlib, json, shutil, subprocess, sys
 from pathlib import Path
+
+from progress_marker import progress_marker
 
 ROOT = Path(__file__).parent.resolve()
 KEYS, INSTANCES, RESULTS = ROOT / "keys", ROOT / "instances", ROOT / "results"
@@ -76,43 +78,48 @@ def main():
             sys.exit("aborted")
 
     RESULTS.mkdir(exist_ok=True)
-    for k in todo:
-        name = k["instance"]
-        outdir = RESULTS / name
-        outdir.mkdir(parents=True, exist_ok=True)
-        # log the input, not just the output
-        (outdir / "prompt_sent.txt").write_text(prompt_text, encoding="utf-8")
-        result = outdir / "result.json"
-        cmd = codex_cmd(INSTANCES / name, result, prompt_text)
+    # only a real batch is worth marking; a single --only run is minutes
+    marker = (progress_marker(f"diagnosis batch, {len(todo)} instances",
+                              "results/", f"~{max(1, len(todo)*8//60)}h")
+              if len(todo) > 3 else contextlib.nullcontext())
+    with marker:
+      for k in todo:
+         name = k["instance"]
+         outdir = RESULTS / name
+         outdir.mkdir(parents=True, exist_ok=True)
+         # log the input, not just the output
+         (outdir / "prompt_sent.txt").write_text(prompt_text, encoding="utf-8")
+         result = outdir / "result.json"
+         cmd = codex_cmd(INSTANCES / name, result, prompt_text)
 
-        # the guard, checked against the command actually about to run
-        if not any(WEB_GUARD in str(x) for x in cmd):
-            sys.exit("REFUSING: web-search guard missing from the command")
+         # the guard, checked against the command actually about to run
+         if not any(WEB_GUARD in str(x) for x in cmd):
+             sys.exit("REFUSING: web-search guard missing from the command")
 
-        print(f"--- {name} ...", flush=True)
-        p = subprocess.run(cmd, capture_output=True,
-                           # encoding must be explicit: on Windows, text=True
-                           # encodes stdin as cp1252 and codex rejects it as
-                           # invalid UTF-8 the moment the prompt has an em dash
-                           encoding="utf-8", errors="replace",
-                           input=prompt_text, timeout=3600)
-        log = (p.stdout or "") + (p.stderr or "")
-        (outdir / "stdout.log").write_text(log, encoding="utf-8")
-        # did the whole prompt actually arrive? check for a phrase from the end
-        # of it, not the beginning.
-        canary = "what you examined"
-        if canary not in log.lower():
-            print("    !! PROMPT TRUNCATED - the agent did not receive the "
-                  "full instructions. Result is not comparable.")
-        searched = (p.stdout or "").lower().count("web search")
-        if searched:
-            print(f"    !! {searched} web searches despite the guard - "
-                  f"treat this result as contaminated")
-        if result.exists():
-            n = len(json.loads(result.read_text(encoding="utf-8")).get("findings", []))
-            print(f"    ok, {n} findings")
-        else:
-            print(f"    no result written (exit {p.returncode})")
+         print(f"--- {name} ...", flush=True)
+         p = subprocess.run(cmd, capture_output=True,
+                            # encoding must be explicit: on Windows, text=True
+                            # encodes stdin as cp1252 and codex rejects it as
+                            # invalid UTF-8 the moment the prompt has an em dash
+                            encoding="utf-8", errors="replace",
+                            input=prompt_text, timeout=3600)
+         log = (p.stdout or "") + (p.stderr or "")
+         (outdir / "stdout.log").write_text(log, encoding="utf-8")
+         # did the whole prompt actually arrive? check for a phrase from the end
+         # of it, not the beginning.
+         canary = "what you examined"
+         if canary not in log.lower():
+             print("    !! PROMPT TRUNCATED - the agent did not receive the "
+                   "full instructions. Result is not comparable.")
+         searched = (p.stdout or "").lower().count("web search")
+         if searched:
+             print(f"    !! {searched} web searches despite the guard - "
+                   f"treat this result as contaminated")
+         if result.exists():
+             n = len(json.loads(result.read_text(encoding="utf-8")).get("findings", []))
+             print(f"    ok, {n} findings")
+         else:
+             print(f"    no result written (exit {p.returncode})")
 
 
 if __name__ == "__main__":
