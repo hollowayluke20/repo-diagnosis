@@ -48,6 +48,13 @@ allowed.
   is. This also solves "the fix does not fit this repo".
 - **Public repositories only in prototype 1.** A privacy promise can be added
   later and never retracted.
+- **A repo with no usable tests is served, not refused** — but every claim made
+  about it is downgraded to *proposed*, because the second half of the proof
+  ("nothing else broke") leans on the repository's own test suite. The system
+  degrades honestly rather than either turning people away or overclaiming.
+- **Proof comes before pipeline.** Part 2 is sequenced ahead of Part 3
+  deliberately: if "better" cannot be shown without a human, then searching,
+  fixing and the database are decoration on an unprovable core.
 - **Scan cheapest-first**: existing tools, then the project's own tests, then
   the AI, then actually breaking it. Anything a linter finds should never cost
   an API call.
@@ -160,7 +167,8 @@ Deliver the improved repository in a form the submitter can use.
 
 Done when: a completed run outputs an applicable change set with proven and
 proposed changes separated, every proven change carrying its evidence, and every
-proposed one carrying the source that inspired it.
+proposed one carrying the source that inspired it — and a run against a repo
+with no usable test suite produces *proposed* changes only, never *proven*.
 
 ## Stage 13: Get better with use
 Store the idea and shape of each proven fix, indexed by the problem it solved,
@@ -192,7 +200,9 @@ problem he describes, that he did not already know about.
 
 # PART 5 — Prototype 2
 
-*Deferred deliberately. Neither is needed to demonstrate the thesis.*
+*In scope, sequenced last. Neither is needed to demonstrate the thesis, so
+neither should delay Parts 1-3 — but the end goal is the whole brief, not a
+prototype, and this part is where the rest of it lands.*
 
 ## Stage 16: The Auditor
 Dead code and measurable slowness, both of which prove themselves: delete it and
@@ -222,10 +232,11 @@ Unresolved by design, each with the evidence that would settle it.
   data, so a good score may mean the fix was memorised. Bugs fixed after the
   training cutoff are the only clean measure. *Settled by: comparing scores on
   well-known versus obscure instances.*
-- **Whether a repo without usable tests can be served at all.** The second half
-  of the proof leans on the repository's own test suite. *Settled by: deciding
-  whether such repos are refused, or served with every claim downgraded to
-  proposed.*
-- **What "finished" means to Alex.** The brief describes a company. Whether it
-  wants a working demonstration of the thesis or the whole thing changes the
-  scope of Parts 3 and 4. *Settled by: asking him.*
+- **What "finished" means to Alex.** The brief describes a company, and the
+  committed scope here is all five parts. Whether he expects that, or a working
+  demonstration of the thesis, changes how long Parts 4 and 5 are allowed to
+  take. *Settled by: asking him.*
+- **How long this gets.** Scope is the full brief with no stated deadline, and
+  third year plus an existing daily newsletter are both live. *Settled by:
+  putting a date on Part 2 specifically — if "better" cannot be proved by then,
+  narrow the project to what can be.*
