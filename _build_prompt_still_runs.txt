@@ -1,0 +1,135 @@
+You are working in the repo-diagnosis repository. Build one new script:
+check_still_runs.py, at the repo root, next to build_instances.py, score.py
+and fix_bug.py.
+
+READ FIRST, in this order, before writing anything:
+  build_instances.py   (reuse its sh(), test_command(), rm_tree(), first_error(),
+                         provision_python() helpers rather than duplicating them
+                         - import them from build_instances)
+  fix_bug.py            (see test_summary() and the copy-a-COPY pattern in main())
+  SCORING.md            (the section "PART 2 - Still runs quality check (Stage 6)"
+                         at the bottom is the exact rule to implement - read it in
+                         full before coding)
+  progress_marker.py    (use progress_marker() for any batch over ~6 instances,
+                         exactly like build_instances.py and run_diagnosis.py do)
+  PROJECT-STATE.md and AGENTS.md (repo conventions: commit messages, what not to
+                         commit, matching existing code style)
+
+THE RULE (also in SCORING.md - implement exactly this, do not invent a
+different scoring shape):
+
+For a given instance:
+  1. OLD run: run the project's own test command (whatever run_test.sh
+     specifies, via test_command() from build_instances.py) using the Python
+     already provisioned inside the instance (instance_dir/.python/python.exe).
+     Run it directly against the instance folder - read only, no copy needed.
+     Record: did it collect/run at all, and how many tests failed.
+  2. NEW run: copy the instance to a scratch folder (NOT under instances/ -
+     put scratch work under a new top-level "portability_scratch/" folder,
+     which must be added to .gitignore, same as fixes/ and instances/ are).
+     Exclude .python, .git, __pycache__, .pytest_cache, .ruff_cache when
+     copying (shutil.ignore_patterns, same list fix_bug.py uses plus .python).
+     In the scratch copy, create a plain venv using THIS machine's own current
+     Python (sys.executable, `python -m venv`) - do not use
+     build_instances.provision_python for this, a plain venv of the current
+     interpreter is the "current Python" side of the comparison.
+     Reinstall the same declared dependencies into that venv: the bug's
+     requirements.txt, the same testing-extras list build_instances.py
+     installs (pytest, ruff, pytest-mock, pytest-cov, freezegun, mock,
+     pytest-timeout, nose, parameterized, pytest-asyncio), any of
+     requirements-dev.txt / test_requirements.txt / requirements/test.txt /
+     dev-requirements.txt that exist, then `pip install -e .`.
+     Run the identical test command in the venv. Record the same two signals.
+     Delete the scratch copy when done - it is disposable, never commit it.
+  3. Compare the two runs and produce ONE of three verdicts:
+     - PORTABLE: the NEW run collected/ran, and its failed-test count is
+       <= the OLD run's failed-test count. Nothing that worked before broke.
+     - BROKEN: the NEW run could not even collect/start (e.g. an import the
+       project relies on no longer exists on current Python), OR its failed
+       count is greater than the OLD run's. Record the concrete error line
+       from the NEW run as the evidence (reuse first_error() from
+       build_instances.py for this).
+     - NOT_APPLICABLE: the OLD run itself could not collect/run at all. There
+       is no usable baseline, so make no claim either way - this is not the
+       same as PORTABLE and must never be silently folded into it.
+
+  Parsing test output: handle BOTH pytest summary lines ("3 failed, 180
+  passed in 12s" / "180 passed in 4s") AND unittest summary lines ("OK" /
+  "FAILED (failures=3)" / "FAILED (errors=2)"), since test_command() can
+  return either runner depending on the project (see its docstring - black,
+  tornado and youtube-dl use unittest with dotted module paths). A run that
+  could not be collected at all shows up as ModuleNotFoundError, ImportError,
+  SyntaxError, "collected 0 items", "no tests ran", or "found no collectors"
+  in the output - treat any of those as collection failure, not as "0 failed".
+
+CLI:
+  python check_still_runs.py                 # every VALID instance from the
+                                               # keys directory, excluding
+                                               # built_at_fixed_commit ones
+  python check_still_runs.py --only NAME      # a single instance
+
+  Keys live at (repo root's parent)/repo-diagnosis-keys/*.json, exactly like
+  score.py and fix_bug.py already read them - copy that pattern, do not
+  hardcode a different path. Each key has "instance", "project", "bug_id",
+  "status", "built_at_fixed_commit". Only run instances where
+  status == "VALID" and built_at_fixed_commit is falsy.
+
+  BugsInPy bug dirs (needed for test_command and requirements.txt) live at
+  BugsInPy/projects/<project>/bugs/<bug_id>/, same as build_instances.py uses.
+
+OUTPUT:
+  Write reports/portability.md: one row per instance with its verdict, the
+  old and new failed-test counts, and (for BROKEN or NOT_APPLICABLE) the one
+  concrete error line that explains why. Also write
+  reports/portability_detail.json with the full old/new detail per instance,
+  same spirit as score.py writing both scores.md and verdicts.json.
+
+  Print progress per instance as it runs, same style as build_instances.py
+  and score.py (line per instance, verdict at the end of each).
+
+SELF-TEST - do this and show me the output, do not just claim it passed:
+  Add a `--self-test` flag that, using a COPY of one small real instance (not
+  a real instances/ folder, never touch those), proves the check can actually
+  fail in all three ways before it is trusted on the real corpus:
+    1. Inject a syntax error into a source file in the copy, run the NEW-side
+       pipeline against it, and confirm the result is "could not collect" -
+       print PASS/FAIL for this check based on what actually happened.
+    2. Simulate a dependency that current Python removed: after creating the
+       venv, monkeypatch/break an import the project needs (e.g. rename an
+       installed package's directory in site-packages, or literally add a
+       shim module that raises ImportError on import) so the NEW run cannot
+       even start, and confirm the verdict logic reports BROKEN, not
+       PORTABLE. Print PASS/FAIL.
+    3. Corrupt the OLD side only (e.g. temporarily point at a nonexistent
+       python.exe path for that one check) and confirm the verdict is
+       NOT_APPLICABLE, never PORTABLE and never BROKEN. Print PASS/FAIL.
+  If any of the three does not actually fail the way it's supposed to, say so
+  plainly in the output rather than reporting PASS.
+
+CONVENTIONS TO MATCH (do not deviate):
+  - Same docstring style as the other scripts: a short paragraph at the top
+    explaining WHY the script exists and what problem it fixes, then Usage.
+  - subprocess calls: use sh() from build_instances.py (capture_output,
+    text=True, errors="replace", stdin=subprocess.DEVNULL, timeout).
+  - No non-ASCII characters anywhere (check_prompt_sync.py's rule about
+    ASCII-only applies to prompts specifically, but keep this file ASCII too
+    for consistency and to avoid the em-dash corruption bug already hit once
+    in this repo).
+  - Do not modify build_instances.py, fix_bug.py, score.py, or anything under
+    instances/ or BugsInPy/. This is a new, additive script only.
+  - Add "portability_scratch/" to .gitignore.
+  - When finished, update PROJECT-STATE.md: add check_still_runs.py to the
+    "What is finished" list with one line saying what its gate is (mirroring
+    how the other four entries there describe their own proof, e.g.
+    build_instances.py's line about the fixed-commit rejection gate).
+  - Do NOT touch PLAN.md, SCORING.md, README.md, or AGENTS.md - those are
+    already up to date for this piece of work.
+  - Do not run the full 33-instance batch yourself. Run --self-test, and run
+    the real check against exactly ONE real instance (pick a small one, e.g.
+    an httpie-* or cookiecutter-* instance) to prove it works end-to-end and
+    show real numbers. Leave the full batch for a separate step.
+  - Write real commit(s) to git with a plain-sentence message describing what
+    changed, but do NOT push - that happens after the numbers are reviewed.
+
+When you are done, print a short plain-English summary of what verdict the
+one real instance you tested got, and the three self-test PASS/FAIL results.

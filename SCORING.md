@@ -125,78 +125,73 @@ language versions. This is provable and cheap, and invisible to the owner.*
 
 ## What "still runs" means
 
-**Test suite passes (if tests exist) OR package imports without error (if no tests).**
+**Does the project's own test suite get worse when moved from its original
+Python to a current one?**
 
-This is composite by necessity:
-- With tests: proof means the repository's own test suite passes end-to-end.
-- Without tests: proof means we can import the package without error.
+Not "does every test pass" — for this corpus, every instance carries a
+deliberately-failing test by construction (that is the catalogued bug). A rule
+that required 100% green would report every single instance as broken,
+regardless of Python version, which is a check that can never pass and
+therefore proves nothing. So the comparison is **before vs after**, the same
+idea `fix_bug.py` already uses to judge a fix: not "is it perfect" but "did
+this make it worse."
 
-For repositories with no usable tests, the result is downgraded to *proposed*,
-matching the design principle in PLAN.md Stage 6.
+## Why not just read the project's own CI config?
+
+Many mature projects already test themselves across Python versions (GitHub
+Actions matrices, tox). That is not usable here for two reasons:
+
+1. `build_instances.py` deletes `.git` on purpose, so CI configs are gone by
+   design — nothing to read even if we wanted to.
+2. Even where a CI config exists, a passing badge is a claim about the past,
+   not evidence about now — the exact trap this session started from ("an
+   agent saying it finished is a claim, not a result"). A project's CI last
+   ran against whatever Python was current *then*. It says nothing about
+   whether it still works on the Python installed on this machine *today*.
+   Real, current example: **luigi failed to install cleanly** during corpus
+   building — a live failure a stale green checkmark would never have shown.
+
+So: run it, don't read about it, on both sides of the comparison.
 
 ## How to measure it
 
-1. **Does the repository have tests?** Look for a test runner (pytest, unittest, etc.)
-   or a test directory.
-   - If yes: run `pytest` (or the project's own test command) and check exit code.
-   - If no: try `python -c "import <package_name>"` in the environment.
+For a given instance:
 
-2. **Record both signals always:**
-   - Tests exist: yes/no
-   - Tests pass: yes/no/not-run (if no tests)
-   - Import succeeds: yes/no
-
-3. **Scoring:**
-   - If tests exist and pass → **PROVEN**
-   - If tests exist and fail → **BROKEN** (the fix must not have made it worse)
-   - If no tests exist and import succeeds → **PROPOSED** (downgraded, because we
-     haven't proved the whole thing works)
-   - If no tests exist and import fails → **BROKEN**
+1. **OLD run** — run the project's own test command (whatever `run_test.sh`
+   specifies — pytest, unittest, tox) using the Python already provisioned
+   inside the instance. Record `old_failed` (count of failing tests) and
+   whether the suite could be collected/run at all.
+2. **NEW run** — copy the project to a scratch folder, provision a **current**
+   Python there, reinstall the same declared dependencies, run the identical
+   test command. Record `new_failed` and whether it could collect/run at all.
+3. **Compare, don't grade in isolation:**
+   - **PORTABLE** — the new run collected and ran, and `new_failed <=
+     old_failed`. Nothing that worked before stopped working.
+   - **BROKEN** — the new run could not even collect/start (e.g. an import
+     the project relies on no longer exists in current Python), OR
+     `new_failed > old_failed`. This is the concrete, provable portability
+     break, and the error message from the new run is the evidence.
+   - **NOT APPLICABLE** — the *old* run itself could not collect/run at all.
+     There is no usable baseline, so no claim is made either way. Honest
+     "cannot test this one," not a guess.
 
 ## Worked example
 
-**Project: requests (a real library with tests)**
-
-Before fix attempt:
-```
-$ pytest
-FAILED tests/test_requests.py::test_get (urllib3 incompatibility)
-1 failed in 2.34s
-```
-Result: BROKEN
-
-After applying a Python 3.10 compatibility fix:
-```
-$ pytest
-passed 153 in 8.2s
-```
-Result: PROVEN
-
----
-
-**Project: a small utility with no tests**
-
-Before:
-```
-$ python -c "import myutil"
-# (no error)
-```
-Result: PROPOSED (no test suite to prove it, import only)
-
-After a breaking change (dependency upgrade removed a function):
-```
-$ python -c "import myutil"
-ModuleNotFoundError: cannot import name 'removed_function' from 'urllib3'
-```
-Result: BROKEN
+*(Filled in with a real run from the corpus — not invented — once
+`check_still_runs.py` has been run. See `reports/portability.md` for the
+live version of this table.)*
 
 ## Ensuring this can fail
 
-To verify the check works, deliberately break it:
+Before trusting the check on real instances, break it on purpose:
 
-1. **Inject a syntax error** into the main module and rerun — import should fail.
-2. **Remove a core dependency** from the environment and rerun — import or tests
-   should fail.
-3. **Add a failing test** to a repo that currently passes — tests should fail.
+1. **Inject a syntax error** into a source file the new environment imports —
+   the NEW run must report BROKEN (collection fails).
+2. **Delete a required dependency's import** in the scratch copy only — the
+   NEW run must report BROKEN, not silently pass.
+3. **Run it against an instance where OLD itself cannot run** (a deliberately
+   corrupted requirements file) — the result must be NOT APPLICABLE, never a
+   false PORTABLE.
 
-All three must be caught by the check before any code runs.
+All three must be observed to fail correctly before the check is trusted on
+the real 33 instances.
