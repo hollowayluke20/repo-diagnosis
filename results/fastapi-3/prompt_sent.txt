@@ -1,4 +1,5 @@
 You are auditing the Python codebase in this folder for defects.
+(prompt v4)
 
 A complete Python installation is at .python\python.exe, with pytest and ruff
 installed. Use it for anything you run.
@@ -44,6 +45,21 @@ Examine three things, not one.
 Code can be structurally correct, receive exactly the type it expected, and
 still be wrong for the content that actually passes through it.
 
+Two kinds of defect, and the second is easy to miss
+
+Some code CRASHES. You feed it something unusual and it raises, or hangs, or
+exits. These are the easy ones to find and the easy ones to demonstrate.
+
+Some code RUNS PERFECTLY AND RETURNS THE WRONG ANSWER. Ordinary input, no
+error, a result of exactly the right shape, and the value in it is wrong.
+These are often more serious, because nobody notices. Nothing alerts anyone.
+The program carries on and the answer is quietly incorrect.
+
+Look for both. Ask not only "what makes this fall over" but "does this compute
+the right answer for perfectly normal input". Read what a function is meant to
+do - its name, its documentation, how it is called elsewhere - and check that
+it actually does that.
+
 What counts as a defect
 
 The code does something other than what it is clearly intended to do.
@@ -73,6 +89,10 @@ About the reproduction, because it is how your finding is scored:
   argued it is.
 - It must FAIL on this code, by raising an exception or exiting non-zero, and
   it must fail BECAUSE OF THIS DEFECT. If the defect were fixed, it would pass.
+- For a wrong-answer defect there is nothing to catch, so work out what the
+  correct result would be and assert it. The script should fail on the
+  assertion. Say plainly in the finding why you believe that is the correct
+  answer.
 - It runs from the repository root, with the project importable. Plain Python
   only: no pytest, no fixtures, no command-line arguments, no test framework.
 - Do not catch and print the error. Let it surface, so the failure is real.

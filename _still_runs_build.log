@@ -1,0 +1,12 @@
+Implemented and committed locally: `e8a496f Add current-Python portability check` (not pushed, as requested).
+
+- Added [check_still_runs.py](C:/Users/hollo/dev/repo-diagnosis/check_still_runs.py), scratch/report ignores, and PROJECT-STATE entry.
+- Self-test output:
+  - Syntax error: PASS
+  - Missing dependency/import: PASS
+  - Unusable OLD baseline: PASS
+- Real run: `httpie-1` -> `NOT_APPLICABLE`.
+  - OLD test command could not import `tests/conftest.py` due duplicate pytest fixture application, so no baseline existed.
+  - OLD/New failed counts: unavailable (`None`), correctly not treated as portable.
+
+Reports were written under `reports/` and scratch copies were removed. I left the substantial pre-existing `results/` changes and unrelated untracked logs untouched.

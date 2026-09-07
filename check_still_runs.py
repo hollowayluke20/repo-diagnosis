@@ -47,8 +47,13 @@ def run_tests(work, bug_dir, py):
     collection_failure = any(marker in low for marker in (
         "modulenotfounderror", "importerror", "syntaxerror", "collected 0 items",
         "no tests ran", "found no collectors"))
-    pytest_summary = re.search(r"(?:\d+\s+(?:failed|passed|error|errors)[, ]*)+in\s+",
+    # Both checked separately, not as one contiguous pattern: pytest inserts
+    # clauses like ", 2 warnings" between the counts and the time footer
+    # ("1 passed, 2 warnings in 0.33s"), which broke a single combined regex
+    # and produced a false NOT_APPLICABLE on a run that had actually passed.
+    pytest_summary = (re.search(r"\b\d+\s+(?:failed|passed|error|errors)\b",
                                out, re.IGNORECASE)
+                      and re.search(r"\bin\s+[\d.]+s\b", out, re.IGNORECASE))
     unittest_summary = (re.search(r"Ran\s+\d+\s+tests?", out, re.IGNORECASE)
                         or re.search(r"^OK$|^FAILED\s*\(", out, re.MULTILINE))
     ran = bool((pytest_summary or unittest_summary) and not collection_failure)
@@ -179,7 +184,17 @@ def self_test(keys):
 
 
 def write_reports(results):
+    """Merge into any existing report rather than replacing it - running
+    --only a second time must not erase the instances already recorded."""
     REPORTS.mkdir(exist_ok=True)
+    detail_path = REPORTS / "portability_detail.json"
+    existing = (json.loads(detail_path.read_text(encoding="utf-8"))
+               if detail_path.exists() else [])
+    merged = {item["instance"]: item for item in existing}
+    for item in results:
+        merged[item["instance"]] = item
+    results = [merged[name] for name in sorted(merged)]
+
     lines = ["# Portability", "", "| Instance | Verdict | OLD failed | NEW failed | Evidence |",
              "| --- | --- | ---: | ---: | --- |"]
     for item in results:
@@ -212,15 +227,16 @@ def main():
     marker = (progress_marker(f"portability batch, {len(selected)} instances",
                               "reports/portability.*", f"~{len(selected) * 5 // 60 + 1}h")
               if len(selected) > 6 else contextlib.nullcontext())
-    results = []
     with marker:
         for key in selected:
             print(f"--- checking {key['instance']} ...", flush=True)
             item = check_one(key)
-            results.append(item)
+            # written after EVERY instance, not once at the end - a batch
+            # this long (each instance provisions its own venv) must not lose
+            # everything if it dies or times out partway through
+            write_reports([item])
             print(f"    {item['verdict']} (old failed: {item['old']['failed']}, "
                   f"new failed: {item['new']['failed']})", flush=True)
-    write_reports(results)
     print("Report: reports/portability.md")
 
 

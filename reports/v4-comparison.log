@@ -30,3 +30,61 @@ no instances to run in the 'practice' pile (locked ones need --locked)
 --- tornado-2 ...
     ok, 1 findings
 no instances to run in the 'practice' pile (locked ones need --locked)
+--- tqdm-1-FIXED ...
+    ok, 4 findings
+--- youtube-dl-1 ...
+    no result written (exit 1)
+
+===== SCORING v4 =====
+  black-1 #1: CONFIRMED
+  black-1 #2: CONFIRMED  [right file, wrong place]
+  black-1 #3: CONFIRMED  [right file, wrong place]
+  black-1 #4: CONFIRMED  [right file, wrong place]
+  black-2 #1: CONFIRMED  [right file, wrong place]
+  black-2 #2: CONFIRMED  [right file, wrong place]
+  black-2 #3: CONFIRMED  [right file, wrong place]
+  black-2 #4: CONFIRMED
+  black-3 #1: CONFIRMED
+  black-3 #2: CONFIRMED  [right file, wrong place]
+  black-3 #3: CONFIRMED  [right file, wrong place]
+  black-3 #4: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #1: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #2: CONFIRMED  [right file, wrong place]
+  cookiecutter-1 #3: CONFIRMED  [right file, wrong place]
+  cookiecutter-2 #1: CONFIRMED
+  cookiecutter-2 #2: CONFIRMED
+  cookiecutter-2 #3: CONFIRMED
+  cookiecutter-2 #4: CONFIRMED
+  cookiecutter-2 #5: CONFIRMED
+  fastapi-1 #1: CONFIRMED
+  fastapi-1 #2: CONFIRMED
+  fastapi-1 #3: CONFIRMED
+  fastapi-1 #4: CONFIRMED  [right file, wrong place]
+  fastapi-1 #5: CONFIRMED  [CATALOGUED]
+  fastapi-2 #1: CONFIRMED  [right file, wrong place]
+  fastapi-2 #2: CONFIRMED
+  fastapi-2 #3: CONFIRMED
+  fastapi-2 #4: CONFIRMED
+  fastapi-3 #1: CONFIRMED
+  fastapi-3 #2: CONFIRMED
+  fastapi-3 #3: CONFIRMED
+  httpie-2 #1: CONFIRMED
+  httpie-2 #2: CONFIRMED
+  httpie-3 #1: CONFIRMED  [CATALOGUED]
+  httpie-3 #2: CONFIRMED
+  httpie-3 #3: CONFIRMED  [right file, wrong place]
+  spacy-3 #1: CONFIRMED
+  spacy-3 #2: CONFIRMED
+  tornado-2 #1: CONFIRMED
+reproduction**, not by reading it.
+
+- **Catch rate: 17%** (2 of 12 instances) — found the bug the
+  dataset catalogued. Low is expected; the dataset records one bug per
+  project.
+- **Confirmation rate: 100%** (40 of 40 findings) — reproductions that
+  actually failed. This is the quality measure.
+- **Noise rate: 0%** (0 unconfirmed, 0 malformed).
+
+
+-> reports/scores.md and reports/verdicts.json
+===== DONE =====
