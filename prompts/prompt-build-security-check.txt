@@ -1,0 +1,79 @@
+We're building a platform that takes a code repository and gives back a
+better one, with proof. This session builds the security-check quality from
+PLAN.md Stage 6 - one of six provable improvements, alongside bugs.
+
+Read first, in this order:
+  C:\Users\hollo\dev\repo-diagnosis\README.md
+  C:\Users\hollo\dev\repo-diagnosis\PLAN.md          (Stage 6)
+  C:\Users\hollo\dev\repo-diagnosis\SCORING.md
+  C:\Users\hollo\dev\repo-diagnosis\AGENTS.md
+
+Work in C:\Users\hollo\dev\repo-diagnosis. Other sessions may be working in
+this repo at the same time - do not touch instances/, results/, library/,
+database/, or the diagnosis prompts. Build in new files of your own.
+
+THE GOAL - THIS IS ACTUALLY TWO SEPARATE CHECKS
+
+1. KNOWN HOLES IN LIBRARIES. A project declares the libraries it depends on
+   (requirements.txt, setup.py, pyproject.toml, etc). For each one, check
+   whether that exact library and version has a publicly recorded security
+   problem. This is a lookup against a public advisory database, not
+   judgement - no AI needed. A hit must name the exact library, the exact
+   version, and the specific advisory it matches. Never claim "this repo is
+   at risk" - only ever claim "this repo uses a version with a recorded
+   advisory attached to it." Whether the vulnerable part is actually reachable
+   the way this project uses it is a separate, harder claim we are not making.
+
+2. EXPOSED SECRETS IN THE CODE ITSELF. Search the actual text of the
+   repository for things that match the SHAPE of a real API key, password, or
+   token - not a lookup, a pattern search. A hit must quote the exact file and
+   line.
+
+   This one is dangerous to get wrong in a specific way: a false alarm here
+   reads as "you have leaked a credential", which is a much scarier claim than
+   "your dependency is old." Test fixtures are full of fake example keys
+   ("your-api-key-here", variables literally named example_password) that
+   LOOK like real secrets and are not. Do not let this check cry wolf.
+
+DECIDE WHAT COUNTS AS A HIT, BEFORE BUILDING ANYTHING
+
+Write this into SCORING.md as its own section, same discipline as the bug
+section already there:
+  - what counts as a hit for each of the two checks
+  - what counts as unknown/undecidable (no requirements file to read, code
+    too obfuscated to search) - this must be its own separate answer, never
+    silently folded into "clean". A project we could not check is not a
+    project we proved safe.
+  - a worked example for each, using a real finding once you have one
+
+THE TEST PLAN - already agreed, follow it exactly
+
+  1. Build the check.
+  2. Add a CONTROL case before testing on real projects: run it against a
+     project you are confident has NO known holes and NO real secrets in it.
+     It must stay quiet. If it invents a finding on clean code, that is the
+     first thing to fix, before anything else.
+  3. Test on 10 real instances from instances/ (do not touch the locked pile -
+     see MANIFEST.md).
+  4. Look at what it found, reconfigure whatever needs it.
+  5. Test on 10 DIFFERENT instances it has not seen. Reusing the same ten
+     teaches the ten, not the check.
+  6. Reconfigure again if needed, then test on 20.
+
+Report actual findings from real runs at each step, not descriptions of what
+you expect to find.
+
+HOUSEKEEPING
+  - Push when you finish a piece of work. A daily reviewer reads the repo at
+    02:00 and cannot see this machine.
+  - Update PLAN.md in the same sitting a decision is made.
+  - An agent saying it finished is a claim, not a result. Check the artefact.
+  - Today alone, six different things looked correct and were not - a stale
+    price used anyway, a scorer counting a wrong-file match as a hit, a
+    prompt silently truncated to one sentence, a prompt file with corrupted
+    characters, answer keys reachable from inside a test instance, and an A/B
+    test that crashed both sides and reported it as a tie. Be the kind of
+    skeptical that would have caught those - check the actual artefact, not
+    whether the script printed "done".
+  - Explain things simply. I started coding in June 2026 - no jargon without
+    saying what it means in the same breath.
