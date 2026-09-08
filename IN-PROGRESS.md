@@ -1,7 +1,7 @@
 # In progress
 
 What: instance build, 20 bugs
-Started: 2026-09-08T02:00:29
+Started: 2026-09-08T02:37:15
 Expected to finish: ~1h
 Output lands in: instances/ and keys/
 
