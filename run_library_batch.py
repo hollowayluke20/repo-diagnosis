@@ -85,6 +85,10 @@ def isolated_worktree():
         if p.returncode:
             raise RuntimeError(f"could not create isolated worktree: {p.stderr or p.stdout}")
         made_worktree = True
+        # Results are tracked, so a worktree receives a separate checked-out
+        # copy. Replace that copy with a junction to the existing diagnostics:
+        # this sees uncommitted diagnosed results too and avoids a stale copy.
+        shutil.rmtree(directory / "results")
         make_junction(directory / "instances", ROOT / "instances")
         make_junction(directory / "results", ROOT / "results")
 
@@ -97,6 +101,12 @@ def isolated_worktree():
         yield directory
     finally:
         if made_worktree:
+            # Remove junctions themselves, never their targets, before asking
+            # Git to delete the temporary checkout.
+            for name in ("instances", "results"):
+                link = directory / name
+                if link.exists():
+                    run(["cmd", "/c", "rmdir", str(link)])
             run(["git", "worktree", "remove", "--force", str(directory)], cwd=ROOT)
         elif directory.exists():
             shutil.rmtree(directory, ignore_errors=True)
