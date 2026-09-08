@@ -8,7 +8,7 @@ between ON and OFF" - that is wrong. Two identical crashes are not the same
 as two identical real results, and the script needs to be able to tell those
 apart.
 
-Two things to do:
+Three things to do:
 
 1. Fix ab_fix.py so it clearly distinguishes:
    - BOTH SIDES CRASHED BEFORE ATTEMPTING A FIX (inconclusive - say so loudly,
@@ -26,13 +26,20 @@ Two things to do:
    copy is set up the same way those did - a fully self-contained
    interpreter, not just "codex" on PATH.
 
-Then actually run it end to end on black-1 finding 2 again, and tell me
-honestly:
+3. Point the test at black-1, finding 2 specifically, not a random one.
+   Read reports/retrieval-seed-probe.txt: this finding scored 0.66 against
+   the library entry "path-stays-inside-base-directory", the strongest match
+   in the whole file. Test the best available match first - if the library
+   cannot help on its most favourable case, it cannot help anywhere, and if
+   it can, that proves the mechanism actually works before testing weaker
+   matches.
+
+Then actually run it end to end, and tell me honestly:
   - did both sides genuinely run a coding agent this time
   - did it pass or fail on each side
-  - if it credited a library entry as used, was that entry actually relevant
-    to the bug (you already judged the three candidates as a poor fit - check
-    whether that changed)
+  - if it credited the library entry as used, did using it actually change
+    the outcome (passed vs failed, number of attempts, where the fix landed)
+    compared to not using it
 
 If it still can't get a real result, say so plainly rather than printing
 anything that looks like a conclusion.
