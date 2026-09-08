@@ -111,6 +111,48 @@ def first_error(out, limit=300):
     return (lines[-1] if lines else out.strip())[:limit]
 
 
+def ensure_package_dirs(inst, dotted):
+    """Make a dotted test-module path importable without contaminating it.
+
+    `python -m unittest tests.test_black.BlackTestCase.test_x` imports the
+    module by dotted path. If `tests/` is a PEP 420 namespace package it can
+    be silently shadowed by a *regular* `tests` package installed by the
+    project's own editable install or a dependency, in which case the local
+    one never imports and the gate sees "No module named tests.test_black".
+    Creating an `__init__.py` forces the local directory to be a regular
+    package and wins the shadow. We create only what is missing, record it,
+    and the caller restores afterwards so the instance is left exactly as the
+    buggy commit had it.
+
+    `dotted` is the module path (e.g. `tests.test_black`); any trailing
+    `.Class.method` is stripped by the caller.
+    """
+    parts = dotted.split(".")
+    if len(parts) < 2:
+        return []
+    created = []
+    dir_ = inst
+    for part in parts[:-1]:
+        dir_ = dir_ / part
+        if not dir_.is_dir():
+            break
+        marker = dir_ / "__init__.py"
+        if not marker.exists():
+            marker.write_text("", encoding="utf-8")
+            created.append(marker)
+    return created
+
+
+def restore_package_dirs(created):
+    """Delete only the __init__.py files this run added, leaving the instance
+    exactly as it was."""
+    for marker in created:
+        try:
+            marker.unlink()
+        except OSError:
+            pass
+
+
 def test_command(bug_dir, py):
     """Honour whichever runner BugsInPy specifies, rather than forcing pytest.
 
@@ -245,9 +287,19 @@ def build(spec, at_fixed=False):
     # --- THE VALIDATION GATE ---
     cmd, original = test_command(bdir, py)
     key["failing_test"] = original
+    # Namespace-package shadowing: a dotted module path like tests.test_black
+    # fails to import when a regular `tests` package from the editable install
+    # shadows the local namespace package. Ensure the package dirs first, and
+    # restore them afterwards so the instance is left exactly as the buggy
+    # commit had it.
+    module_path = next((a.split(".")[0:2] for a in cmd if "." in a and
+                        a.split(".")[0] in ("tests", "test")), None)
+    dotted = ".".join(module_path) if module_path else None
+    created = ensure_package_dirs(inst, dotted) if dotted else []
     try:
         rc, out = sh(cmd, cwd=str(inst), timeout=900)
     except subprocess.TimeoutExpired:
+        restore_package_dirs(created)
         key["invalid_reason"] = "test run timed out"
         return key
 
@@ -264,6 +316,10 @@ def build(spec, at_fixed=False):
     else:
         # non-zero and it actually ran: the test failed, which is the point
         key["status"] = "VALID"
+
+    # restore the __init__.py files we added, so the instance is exactly as
+    # the buggy commit had it
+    restore_package_dirs(created)
 
     # --- put the folder back to the buggy commit, then destroy the history ---
     if overlaid:

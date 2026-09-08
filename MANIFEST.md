@@ -7,11 +7,13 @@ built, or whose bug did not reproduce, are not here - see
 
 No answers in this file: no file names, no line numbers, no patch.
 
-**33 instances — 23 practice, 10 locked.**
+**45 instances — 31 practice, 14 locked.**
 
 | Instance | Python | Files | Lines | Pile |
 |---|---|---|---|---|
 | black-1 | 3.8.3 | 80 | 102996 | practice |
+| black-10 | 3.8.3 | 58 | 96570 | locked |
+| black-11 | 3.8.3 | 57 | 96458 | locked |
 | black-2 | 3.8.3 | 74 | 99184 | practice |
 | black-3 | 3.8.3 | 74 | 99169 | practice |
 | cookiecutter-1 | 3.9 (requested 3.6.9, used 3.9) | 84 | 7780 | practice |
@@ -24,11 +26,15 @@ No answers in this file: no file names, no line numbers, no patch.
 | httpie-1 | 3.9 (requested 3.7.3, used 3.9) | 48 | 6094 | practice |
 | httpie-2 | 3.9 (requested 3.7.3, used 3.9) | 46 | 5708 | practice |
 | httpie-3 | 3.9 (requested 3.7.3, used 3.9) | 45 | 5651 | practice |
+| httpie-5 | 3.9 (requested 3.7.3, used 3.9) | 8 | 1016 | practice |
 | luigi-1 | 3.8.3 | 251 | 60740 | practice |
+| luigi-10 | 3.8.3 | 206 | 45435 | practice |
+| luigi-11 | 3.8.3 | 206 | 45390 | locked |
 | luigi-2 | 3.8.3 | 251 | 60734 | locked |
 | sanic-1 | 3.8.3 | 115 | 20577 | locked |
 | sanic-2 | 3.8.3 | 114 | 20603 | locked |
 | sanic-3 | 3.8.3 | 115 | 20694 | practice |
+| sanic-5 | 3.8.3 | 88 | 13323 | practice |
 | spacy-1 | 3.9 (requested 3.7.7, used 3.9) | 684 | 127625 | locked |
 | spacy-2 | 3.9 (requested 3.7.7, used 3.9) | 674 | 127182 | practice |
 | spacy-3 | 3.9 (requested 3.7.7, used 3.9) | 672 | 128457 | practice |
@@ -37,11 +43,17 @@ No answers in this file: no file names, no line numbers, no patch.
 | thefuck-3 | 3.9 (requested 3.7.0, used 3.9) | 359 | 13985 | practice |
 | thefuck-4 | 3.9 (requested 3.7.0, used 3.9) | 350 | 13585 | practice |
 | tornado-1 | 3.9 (requested 3.7.0, used 3.9) | 112 | 43398 | practice |
+| tornado-10 | 3.9 (requested 3.7.0, used 3.9) | 121 | 42973 | practice |
+| tornado-11 | 3.9 (requested 3.7.0, used 3.9) | 114 | 40628 | practice |
 | tornado-2 | 3.9 (requested 3.7.0, used 3.9) | 112 | 43280 | practice |
 | tqdm-1 | 3.9 (requested 3.6.9, used 3.9) | 42 | 7012 | locked |
 | tqdm-2 | 3.9 (requested 3.6.9, used 3.9) | 35 | 6505 | locked |
 | tqdm-3 | 3.9 (requested 3.6.9, used 3.9) | 29 | 6049 | locked |
+| tqdm-4 | 3.9 (requested 3.6.9, used 3.9) | 29 | 5899 | practice |
+| tqdm-5 | 3.9 (requested 3.6.9, used 3.9) | 27 | 5722 | practice |
 | youtube-dl-1 | 3.9 (requested 3.7.0, used 3.9) | 839 | 134120 | practice |
+| youtube-dl-10 | 3.9 (requested 3.7.0, used 3.9) | 517 | 59936 | practice |
+| youtube-dl-11 | 3.9 (requested 3.7.4, used 3.9) | 853 | 144515 | locked |
 | youtube-dl-2 | 3.9 (requested 3.7.0, used 3.9) | 830 | 130070 | locked |
 | youtube-dl-3 | 3.9 (requested 3.7.0, used 3.9) | 815 | 126254 | practice |
 
@@ -52,8 +64,11 @@ get. Running them requires an explicit flag and typed confirmation.
 Looking at the result and then changing the prompt spends them
 permanently.
 
+- black-10
+- black-11
 - cookiecutter-3
 - cookiecutter-4
+- luigi-11
 - luigi-2
 - sanic-1
 - sanic-2
@@ -61,4 +76,5 @@ permanently.
 - tqdm-1
 - tqdm-2
 - tqdm-3
+- youtube-dl-11
 - youtube-dl-2
