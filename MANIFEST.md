@@ -7,7 +7,7 @@ built, or whose bug did not reproduce, are not here - see
 
 No answers in this file: no file names, no line numbers, no patch.
 
-**57 instances — 39 practice, 18 locked.**
+**68 instances — 43 practice, 25 locked.**
 
 | Instance | Python | Files | Lines | Pile |
 |---|---|---|---|---|
@@ -18,6 +18,9 @@ No answers in this file: no file names, no line numbers, no patch.
 | black-12 | 3.8.3 | 54 | 95895 | practice |
 | black-13 | 3.8.3 | 53 | 95853 | locked |
 | black-14 | 3.8.3 | 51 | 95624 | practice |
+| black-15 | 3.8.3 | 50 | 95606 | locked |
+| black-16 | 3.8.3 | 50 | 95404 | locked |
+| black-17 | 3.8.3 | 43 | 10500 | practice |
 | black-2 | 3.8.3 | 74 | 99184 | practice |
 | black-3 | 3.8.3 | 74 | 99169 | practice |
 | cookiecutter-1 | 3.9 (requested 3.6.9, used 3.9) | 84 | 7780 | practice |
@@ -37,6 +40,8 @@ No answers in this file: no file names, no line numbers, no patch.
 | luigi-12 | 3.8.3 | 206 | 43116 | practice |
 | luigi-13 | 3.8.3 | 201 | 42166 | locked |
 | luigi-14 | 3.8.3 | 201 | 42149 | practice |
+| luigi-15 | 3.8.3 | 198 | 41032 | locked |
+| luigi-16 | 3.8.3 | 192 | 38721 | practice |
 | luigi-2 | 3.8.3 | 251 | 60734 | locked |
 | sanic-1 | 3.8.3 | 115 | 20577 | locked |
 | sanic-2 | 3.8.3 | 114 | 20603 | locked |
@@ -54,6 +59,8 @@ No answers in this file: no file names, no line numbers, no patch.
 | tornado-11 | 3.9 (requested 3.7.0, used 3.9) | 114 | 40628 | practice |
 | tornado-12 | 3.9 (requested 3.7.0, used 3.9) | 112 | 39704 | practice |
 | tornado-13 | 3.9 (requested 3.7.0, used 3.9) | 113 | 40341 | practice |
+| tornado-14 | 3.9 (requested 3.7.0, used 3.9) | 108 | 38825 | practice |
+| tornado-15 | 3.9 (requested 3.7.0, used 3.9) | 108 | 38197 | locked |
 | tornado-2 | 3.9 (requested 3.7.0, used 3.9) | 112 | 43280 | practice |
 | tqdm-1 | 3.9 (requested 3.6.9, used 3.9) | 42 | 7012 | locked |
 | tqdm-2 | 3.9 (requested 3.6.9, used 3.9) | 35 | 6505 | locked |
@@ -61,11 +68,15 @@ No answers in this file: no file names, no line numbers, no patch.
 | tqdm-4 | 3.9 (requested 3.6.9, used 3.9) | 29 | 5899 | practice |
 | tqdm-5 | 3.9 (requested 3.6.9, used 3.9) | 27 | 5722 | practice |
 | tqdm-7 | 3.9 (requested 3.6.9, used 3.9) | 24 | 5326 | locked |
+| tqdm-8 | 3.9 (requested 3.6.9, used 3.9) | 18 | 3517 | locked |
+| tqdm-9 | 3.9 (requested 3.6.9, used 3.9) | 7 | 999 | locked |
 | youtube-dl-1 | 3.9 (requested 3.7.0, used 3.9) | 839 | 134120 | practice |
 | youtube-dl-10 | 3.9 (requested 3.7.0, used 3.9) | 517 | 59936 | practice |
 | youtube-dl-11 | 3.9 (requested 3.7.4, used 3.9) | 853 | 144515 | locked |
 | youtube-dl-12 | 3.9 (requested 3.7.4, used 3.9) | 868 | 141654 | practice |
 | youtube-dl-13 | 3.9 (requested 3.7.4, used 3.9) | 868 | 141506 | practice |
+| youtube-dl-14 | 3.9 (requested 3.7.4, used 3.9) | 850 | 145867 | locked |
+| youtube-dl-15 | 3.9 (requested 3.7.4, used 3.9) | 831 | 130948 | practice |
 | youtube-dl-2 | 3.9 (requested 3.7.0, used 3.9) | 830 | 130070 | locked |
 | youtube-dl-3 | 3.9 (requested 3.7.0, used 3.9) | 815 | 126254 | practice |
 
@@ -80,17 +91,24 @@ permanently.
 - black-10
 - black-11
 - black-13
+- black-15
+- black-16
 - cookiecutter-3
 - cookiecutter-4
 - luigi-11
 - luigi-13
+- luigi-15
 - luigi-2
 - sanic-1
 - sanic-2
 - spacy-1
+- tornado-15
 - tqdm-1
 - tqdm-2
 - tqdm-3
 - tqdm-7
+- tqdm-8
+- tqdm-9
 - youtube-dl-11
+- youtube-dl-14
 - youtube-dl-2

@@ -1,29 +1,29 @@
 # Rejection report
 
-Attempted: 20  |  Valid: 12  |  Rejected: 8
+Attempted: 20  |  Valid: 11  |  Rejected: 9
 
 ## Rejections by reason
 
-- **fastapi-13** — could not run the test: ImportError while importing test module 'C:\Users\hollo\dev\repo-diagnosis\instances\fastapi-13\tests\test_additional_responses_router.py'.
-- **spacy-5** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\spacy-5\spacy\tests\conftest.py'.
-- **thefuck-13** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\thefuck-13\tests\conftest.py'.
-- **tqdm-6** — could not run the test: except ImportError:
-- **fastapi-14** — could not run the test: ImportError while importing test module 'C:\Users\hollo\dev\repo-diagnosis\instances\fastapi-14\tests\test_additional_properties.py'.
-- **spacy-6** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\spacy-6\spacy\tests\conftest.py'.
-- **thefuck-14** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\thefuck-14\tests\conftest.py'.
-- **fastapi-15** — could not run the test: ImportError while importing test module 'C:\Users\hollo\dev\repo-diagnosis\instances\fastapi-15\tests\test_ws_router.py'.
+- **fastapi-16** — could not run the test: ImportError while importing test module 'C:\Users\hollo\dev\repo-diagnosis\instances\fastapi-16\tests\test_jsonable_encoder.py'.
+- **spacy-7** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\spacy-7\spacy\tests\conftest.py'.
+- **thefuck-15** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\thefuck-15\tests\conftest.py'.
+- **fastapi-4** — could not run the test: ImportError while importing test module 'C:\Users\hollo\dev\repo-diagnosis\instances\fastapi-4\tests\test_param_in_path_and_dependency.py'.
+- **spacy-8** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\spacy-8\spacy\tests\conftest.py'.
+- **thefuck-16** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\thefuck-16\tests\conftest.py'.
+- **fastapi-5** — could not run the test: ImportError while importing test module 'C:\Users\hollo\dev\repo-diagnosis\instances\fastapi-5\tests\test_filter_pydantic_sub_model.py'.
+- **luigi-17** — could not run the test: E   ModuleNotFoundError: No module named 'sqlalchemy'
+- **spacy-9** — could not run the test: ImportError while loading conftest 'C:\Users\hollo\dev\repo-diagnosis\instances\spacy-9\spacy\tests\conftest.py'.
 
 ## Valid instances
 
-- **PySnooper-3** — python 3.8 (requested 3.8.1, used 3.8), 9 files / 712 lines, pile `locked`
-- **black-12** — python 3.8.3, 54 files / 95895 lines, pile `practice`
-- **luigi-12** — python 3.8.3, 206 files / 43116 lines, pile `practice`, leak risks: ['changelog']
-- **tornado-12** — python 3.9 (requested 3.7.0, used 3.9), 112 files / 39704 lines, pile `practice`
-- **youtube-dl-12** — python 3.9 (requested 3.7.4, used 3.9), 868 files / 141654 lines, pile `practice`, leak risks: ['ChangeLog', 'abcnews.py', 'cbsnews.py', 'ctsnews.py', 'ctvnews.py', 'foxnews.py', 'lifenews.py', 'localnews8.py', 'newstube.py', 'sendtonews.py', 'skynewsarabia.py']
-- **black-13** — python 3.8.3, 53 files / 95853 lines, pile `locked`
-- **luigi-13** — python 3.8.3, 201 files / 42166 lines, pile `locked`, leak risks: ['changelog']
-- **tornado-13** — python 3.9 (requested 3.7.0, used 3.9), 113 files / 40341 lines, pile `practice`
-- **tqdm-7** — python 3.9 (requested 3.6.9, used 3.9), 24 files / 5326 lines, pile `locked`
-- **youtube-dl-13** — python 3.9 (requested 3.7.4, used 3.9), 868 files / 141506 lines, pile `practice`, leak risks: ['ChangeLog', 'abcnews.py', 'cbsnews.py', 'ctsnews.py', 'ctvnews.py', 'foxnews.py', 'lifenews.py', 'localnews8.py', 'newstube.py', 'sendtonews.py', 'skynewsarabia.py']
-- **black-14** — python 3.8.3, 51 files / 95624 lines, pile `practice`
-- **luigi-14** — python 3.8.3, 201 files / 42149 lines, pile `practice`, leak risks: ['changelog']
+- **black-15** — python 3.8.3, 50 files / 95606 lines, pile `locked`
+- **luigi-15** — python 3.8.3, 198 files / 41032 lines, pile `locked`, leak risks: ['changelog']
+- **tornado-14** — python 3.9 (requested 3.7.0, used 3.9), 108 files / 38825 lines, pile `practice`
+- **tqdm-8** — python 3.9 (requested 3.6.9, used 3.9), 18 files / 3517 lines, pile `locked`
+- **youtube-dl-14** — python 3.9 (requested 3.7.4, used 3.9), 850 files / 145867 lines, pile `locked`, leak risks: ['ChangeLog', 'abcnews.py', 'cbsnews.py', 'ctsnews.py', 'ctvnews.py', 'foxnews.py', 'lifenews.py', 'localnews8.py', 'newstube.py', 'sendtonews.py', 'skynewsarabia.py', 'trunews.py']
+- **black-16** — python 3.8.3, 50 files / 95404 lines, pile `locked`
+- **luigi-16** — python 3.8.3, 192 files / 38721 lines, pile `practice`, leak risks: ['changelog']
+- **tornado-15** — python 3.9 (requested 3.7.0, used 3.9), 108 files / 38197 lines, pile `locked`
+- **tqdm-9** — python 3.9 (requested 3.6.9, used 3.9), 7 files / 999 lines, pile `locked`
+- **youtube-dl-15** — python 3.9 (requested 3.7.4, used 3.9), 831 files / 130948 lines, pile `practice`, leak risks: ['ChangeLog', 'abcnews.py', 'cbsnews.py', 'ctsnews.py', 'ctvnews.py', 'foxnews.py', 'lifenews.py', 'localnews8.py', 'newstube.py', 'sendtonews.py', 'skynewsarabia.py']
+- **black-17** — python 3.8.3, 43 files / 10500 lines, pile `practice`
