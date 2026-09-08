@@ -478,6 +478,17 @@ Embedding decision implemented: **search matches on the Problem text and tags
 only, never the Fix shape.** A problem resembles another problem, not a cure;
 matching symptoms against treatments is how retrieval quietly underperforms.
 
+### WerkZeug and Starlette screening (2026-09-08)
+
+The already-mined candidates from these two projects are screened by hand before
+they enter the library. Entries must describe a reusable defect and approach;
+cosmetic changes, type-only changes, implementation-specific workarounds, and
+duplicate or superseded fixes are recorded as refusals on their raw candidates.
+Every accepted entry is plain ASCII and must pass the contamination check before
+it can be used for retrieval. Each new entry is then compared manually with all
+diagnosed findings; shared vocabulary is not a match unless the fix shape would
+address the reported cause.
+
 ## Stage 11: Prove a fix is better
 Given a repo, a defect and a candidate change, decide whether the repo is
 genuinely better afterwards. This is where a made fix (Stage 12) gets scored -
