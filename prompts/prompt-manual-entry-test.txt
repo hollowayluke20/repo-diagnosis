@@ -1,0 +1,56 @@
+Work in C:\Users\hollo\dev\repo-diagnosis. Don't touch the corpus or the
+original library/database folders - work in a disposable copy, same as the
+last A/B run did.
+
+FIRST: unblock codex.
+Set the environment variable CODEX_CLI to
+C:\Users\hollo\AppData\Roaming\npm\codex.cmd
+Confirm a coding agent actually runs before doing anything else - do not
+proceed on a guess.
+
+THE REAL TASK
+
+We tested the library's TOP-SCORING match for black-1 finding 2
+(path-stays-inside-base-directory) and it turned out to be a bad match -
+high word-overlap score, wrong problem. That is a real finding about the
+search, but it means we still have not tested whether the library helps AT
+ALL, because it was never given something actually relevant to try.
+
+So this run tests it properly: hand-pick a pairing we can defend by reading
+it, not by a score.
+
+  Instance: cookiecutter-1
+  Finding: 2 (the mixed LF/CRLF line-ending defect)
+  Library entry to force: assumed-text-encoding-on-read
+
+Read both the finding and that library entry yourself first. Confirm in your
+own words that the entry's problem and fix shape genuinely relate to this
+bug - an encoding assumption causing a text-processing failure. If you
+disagree that it's a real match, stop and say so rather than proceeding on my
+say-so.
+
+fix_bug.py and ab_fix.py currently only support --library as an on/off
+switch (uses whatever search retrieves). There is no way yet to force a
+SPECIFIC entry regardless of what search would have ranked first. Add that:
+something like --force-entry <id> that skips search and injects exactly that
+one entry into the fix prompt, bypassing ranking entirely. Keep the change
+small and don't touch how normal --library retrieval works.
+
+Then run the A/B test on cookiecutter-1 finding 2:
+  - side A: no library at all
+  - side B: library on, but forced to use assumed-text-encoding-on-read
+    specifically, not whatever search would normally return
+
+Report honestly:
+  - did both sides pass or fail the proof (bug gone, project's own tests no
+    worse)
+  - did the forced entry actually get credited as used
+  - did having it change the outcome - pass rate, number of attempts, where
+    the fix landed - compared to not having it
+  - if the test itself was inconclusive (a crash, not a real run), say that
+    plainly rather than drawing any conclusion about the library
+
+Push what you build (the --force-entry addition) when done, since that is a
+small permanent tool improvement, not throwaway test scaffolding.
+
+Explain everything as if I'm new to coding - I started in June 2026.
