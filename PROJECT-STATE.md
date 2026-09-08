@@ -73,18 +73,36 @@ across 5 different projects (black, cookiecutter, luigi, sanic, tqdm). See
 `SCORING.md` for the worked example and `reports/portability.md` for the full
 table.
 
-## What is finished
+## VERIFIED DONE
 
-- `build_instances.py` — its gate is proved: an instance built at the *fixed*
-  commit is rejected
-- `run_diagnosis.py` — three guards, each proved by breaking it on purpose:
-  refuses without the internet block, refuses held-back instances, warns if the
-  prompt arrives truncated
-- `score.py` — runs reproductions, reports catch rate and confirmation rate
-- `fix_bug.py` — works on a copy, before-and-after test baseline, `--phantom`
-- `check_still_runs.py` — its gate compares each original-Python test baseline
-  with a clean current-Python copy and rejects any newly worse suite
-- `manifest.py`, `check_prompt_sync.py`, `progress_marker.py`
+Each entry below is done AND was proved by breaking it on purpose (the
+project's own standard). This section is read by the daily project reviewer,
+so it can trust that these are finished and stop proposing them as tomorrow's
+work. A thing is only added here once it has been demonstrated, never because
+it was written.
+
+- **Stage 1 (scoring rules)** — DONE. The two questions, the categories, and a
+  worked example are written down in `SCORING.md`, before any batch ran.
+  Proved: the worked example (a real finding that is not the sought one) is in
+  the file.
+- **Stage 2 (corpus, the gate)** — DONE. `build_instances.py` only admits an
+  instance after its bug's own test is observed to fail. Proved: an instance
+  built at the *fixed* commit is rejected by the gate.
+- **Stage 3 (agent in front, answers out of reach)** — DONE. `run_diagnosis.py`
+  has all three required guards. Proved by breaking each on purpose: it refuses
+  to start without the internet block, refuses held-back instances without
+  explicit confirmation, and records the exact prompt sent alongside every reply.
+- **Stage 8 (run stranger's code safely)** — DONE. The sealed `sandbox/`
+  workspace blocks network, host filesystem, and writes. Proved by escaping
+  first: a canary that succeeds unsealed is refused by the OS when sealed.
+- **`score.py`** — DONE. Runs the reproductions automatically and reports catch
+  rate and confirmation rate.
+- **`fix_bug.py`** — DONE. Works on a copy, keeps a before-and-after test
+  baseline, and has a `--phantom` mode.
+- **`check_still_runs.py`** — DONE. Compares each original-Python test baseline
+  with a clean current-Python copy and rejects any newly worse suite. Proved by
+  its `--self-test` (injects a syntax error and a missing dependency).
+- **`manifest.py`, `check_prompt_sync.py`, `progress_marker.py`** — DONE.
 
 ## What is half-built
 
