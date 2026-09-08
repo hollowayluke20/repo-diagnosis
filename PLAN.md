@@ -564,6 +564,17 @@ matching failing" evidence the brief asks for, though it is not yet decisive -
 three hand-written entries is too small a library to conclude from, and it must
 be re-measured against mined entries.
 
+### First real library A/B batch (decided 2026-09-08)
+
+Run six predeclared practice-pile findings, one each from black,
+cookiecutter, fastapi, httpie, spacy, and tornado. Each
+finding is fixed once with natural library retrieval and once without it. The
+run uses an isolated worktree so retrieval counters, proven status, and the
+database are not changed by an experiment. Report coverage, self-reported
+credit rate, and lift only among credited uses separately; manually reject a
+credited pairing whose fix shape does not address the finding. Do not enlarge
+the batch until its actual fixer cost is known.
+
 ---
 
 # PART 4 — Can anyone use it?
