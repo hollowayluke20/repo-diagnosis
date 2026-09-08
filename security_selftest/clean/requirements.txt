@@ -1,0 +1,8 @@
+# Fixture for check_known_holes.py --self-test: pinned, and with no advisory
+# recorded against these exact versions at time of writing (2026-09-08).
+# Small, stable, pure-Python packages chosen for clean advisory histories.
+# If OSV later records something here, bump the pin - a genuine match on this
+# file is the check working, not a bug.
+iniconfig==2.0.0
+pluggy==1.5.0
+packaging==24.2

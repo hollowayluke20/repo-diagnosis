@@ -1,0 +1,6 @@
+# Fixture for check_known_holes.py --self-test: one exact pin (clean) plus
+# unpinned ranges. The pinned dep checks clean, but the unpinned ones cannot
+# be checked - so the verdict must be UNKNOWN, not CLEAN.
+iniconfig==2.0.0
+requests>=2.20
+urllib3<2.0

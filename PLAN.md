@@ -180,6 +180,45 @@ system refuses to report "no problems found" for any repo whose record shows
 it could not run anything, and the check catches deliberately broken code
 (syntax errors, missing deps, etc.).
 
+**SECURITY CHECK DECIDED / BUILT 2026-09-08.** Two separate checks, no AI in
+either:
+
+1. **Known holes in libraries** (`check_known_holes.py`). For every dependency
+   an instance pins to an exact version, look up that exact name+version
+   against the OSV advisory database (same data pip-audit / Dependabot use;
+   OSV does version-range matching server-side; responses cached under
+   `security_cache/` so re-runs are offline). Verdicts: **HIT** (>=1 pinned
+   dep matched >=1 advisory), **CLEAN** (all declared deps pinned, all looked
+   up, nothing matched), **UNKNOWN** (no manifest / manifest declares
+   unpinned deps that cannot be checked / database unreachable). UNKNOWN is a
+   distinct answer from CLEAN by rule - a repo we could not fully check is
+   not one we proved safe. Claim is always "version X has advisory Y recorded
+   against it", never "this repo is exploitable".
+
+2. **Exposed secrets** (`check_exposed_secrets.py`). Pattern search over repo
+   text for provider-shaped credentials (`AKIA…`, `ghp_…`, private-key
+   blocks, …) and high-entropy secret-named assignments. Placeholder /
+   example values filtered (`your-api-key-here`, `AKIAIOSFODNN7EXAMPLE`,
+   keyboard runs, low-entropy). Matches in `test` / `docs` / `demo` /
+   `fixture` / `.pem` paths are **review-only** and do not drive the verdict -
+   that is where fake keys live, and a false "you leaked a credential" is the
+   failure mode to avoid. Verdicts: **HIT** (survivor in a normal source
+   path), **CLEAN** (scanned, nothing survived), **UNKNOWN** (no readable
+   text to scan).
+
+Both have `--self-test` proving every verdict branch (incl. cry-wolf and
+network-down). Full rules + worked examples in SCORING.md (PART 3). Committed
+report: `reports/known-holes.md`. `reports/exposed-secrets.*` is git-ignored
+because it quotes real credential material where any exists.
+
+Round 1 (10 practice) then round 2 (10 fresh) then full practice batch,
+2026-09-08. check 1: almost every instance HIT - 2020-era pins always have
+advisories recorded by now; youtube-dl / some tornado bugs are UNKNOWN (no
+declared deps); spacy is UNKNOWN (source-style requirements, mostly
+unpinned). check 2: only youtube-dl HIT (real API keys embedded in extractor
+source, by design); everything else CLEAN. First pass over-flagged (test
+certs, a FastAPI tutorial key) and the path-trust rule was added in response.
+
 ---
 
 # PART 2 — Can an improvement be proved and run safely? *(the crux)*

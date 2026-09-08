@@ -225,3 +225,227 @@ Before trusting the check on real instances, break it on purpose:
 
 All three must be observed to fail correctly before the check is trusted on
 the real 33 instances.
+
+---
+
+# PART 3 — Security check (Stage 6)
+
+*Two checks that share nothing but plumbing. Both are mechanical - a lookup
+and a pattern search - and neither uses an AI. Built in `check_known_holes.py`
+and `check_exposed_secrets.py`, with `security_common.py` shared and
+`security_selftest/` holding the fixtures. Isolated from the folders other
+agents work in.*
+
+## The one thing both checks must never do
+
+Neither check ever says "this repository is at risk" or "this is
+exploitable". Reachability - whether the vulnerable code path is actually hit
+the way this project uses it - is a separate, much harder claim, and we do
+not make it. The strongest thing either check says is:
+
+- **check 1:** "this repo pins `<library>` to `<version>`, and advisory
+  `<ID>` is recorded against that exact version."
+- **check 2:** "at `<file>:<line>` there is a string matching the shape of a
+  `<credential kind>`, and it is not one of the placeholder / example
+  patterns we filter out."
+
+## Check 1 - known holes in declared libraries
+
+### What is checked
+
+Every dependency the instance **pins to an exact version** (`==` or `===`).
+Sources, in order: the pinned freeze BugsInPy captured for the bug
+(`BugsInPy/projects/<p>/bugs/<b>/requirements.txt` - this is exactly what
+`build_instances.py` installs, so it is the instance's real dependency set),
+then any `requirements*.txt` shipped inside the repo, then `== ` pins found
+in `setup.py` / `setup.cfg` / `pyproject.toml`.
+
+The lookup is [OSV](https://osv.dev) - the same advisory data pip-audit and
+Dependabot use. We send a package name and an exact version; OSV does the
+version-range matching server-side and returns the advisories that apply.
+Responses are cached under `security_cache/` (git-ignored) so a second run is
+offline and repeatable. OSV returns the same underlying flaw as both a GHSA
+and a PYSEC record; these are collapsed on the shared CVE so the count is
+distinct advisories, not database duplication.
+
+### The three verdicts
+
+**HIT** - at least one pinned dependency matched at least one advisory. The
+report lists library, version, advisory ID, CVE alias and summary for each.
+
+**CLEAN** - at least one dependency was pinned, every lookup completed, and
+nothing matched. *In practice no real corpus instance reaches this* - every
+instance is pinned to 2020-era versions and old pins always have advisories
+recorded against them by now. CLEAN is reachable and is proved reachable by
+the `security_selftest/clean/` fixture (current, stable pins, stays silent);
+it is just not where a five-year-old snapshot lands.
+
+**UNKNOWN** - *nothing could be checked.* No dependency file found, or a file
+was found but declares no exact pins (all `>=` / unpinned), or the advisory
+database could not be reached. This is a **separate answer from CLEAN**. A
+repo we could not check is not a repo we proved safe. `youtube-dl` is the
+worked example: it declares zero install dependencies, so the honest verdict
+is UNKNOWN, not "clean".
+
+### Undecidable, spelled out
+
+- **no manifest** -> UNKNOWN, reason "no dependency file found".
+- **manifest present, nothing pinned** -> UNKNOWN, reason "dependencies are
+  declared but none pin an exact version".
+- **database unreachable** (any lookup failed) -> UNKNOWN if there are no
+  hits, or HIT listing what did match with the verdict flagged incomplete -
+  never CLEAN.
+- **unreadable manifest** (binary / could not decode any text encoding) ->
+  listed under `undecidable_files`; if it was the only source, UNKNOWN.
+  Note: BugsInPy ships some `requirements.txt` as UTF-16 (luigi, black); the
+  reader tries utf-8-sig / utf-16 / utf-8 / latin-1 before giving up, so
+  those are read, not called undecidable.
+
+### Worked example - a real hit
+
+`tornado-1`, run 2026-09-08. The instance pins exactly one package,
+`tornado==6.0.4` (from the BugsInPy freeze, which is UTF-16 - decoded fine).
+
+OSV returns 17 distinct advisories recorded against `tornado==6.0.4`,
+including `GHSA-hj3f-6gcp-jg8j` / `CVE-2023-28370` (open redirect),
+`GHSA-8w49-h785-mj3c` / `CVE-2024-52804` (cookie-parsing DoS) and
+`GHSA-753j-mpmx-qq6g` (HTTP request smuggling).
+
+**How it is counted:** verdict **HIT**, 1 library, 17 advisory matches. The
+report row is *"tornado==6.0.4 has 17 advisories recorded against it"* - not
+*"tornado-1 is vulnerable to request smuggling"*. Several of these advisories
+were published years after the instance was built; that does not change the
+claim, which is only about what is recorded against the version. The advisory
+set grows over time, so the number is dated in the report and re-runnable.
+
+## Check 2 - exposed secrets in the repo text
+
+### What is checked
+
+Every readable text file under the instance (binaries, `.python/`,
+`site-packages/`, `node_modules/`, caches and files over 1.5 MB are skipped).
+Two kinds of match:
+
+1. **Provider shapes** - regexes specific enough that the shape alone is
+   meaningful: `AKIA…`/`ASIA…` AWS keys, `ghp_…` GitHub tokens, `xox[baprs]-`
+   Slack tokens, `AIza…` Google keys, `sk_live_…` Stripe, `-----BEGIN …
+   PRIVATE KEY-----` blocks, and a few more.
+2. **Generic assignment** - a variable or key whose name contains
+   `password` / `secret` / `token` / `api_key` / … assigned a quoted string
+   that is the *entire* right-hand side (not a fragment of an expression or a
+   URL template), at least 16 characters, high-entropy.
+
+### Not crying wolf
+
+A false alarm here reads as "you leaked a credential" - far scarier than "a
+dependency is old" - so a match only becomes a finding after filters:
+
+- **Known fakes** - AWS's own `AKIAIOSFODNN7EXAMPLE`, etc.
+- **Placeholder values** - contains `example` / `sample` / `dummy` / `your` /
+  `changeme` / `xxxx` / `<…>` / `{{…}}` / `getenv` / keyboard runs
+  (`qwer5678`) / a value that is all one character / all digits / not random
+  enough for its length.
+- **Path trust** - a match in a `test` / `tests` / `docs` / `docs_src` /
+  `example` / `demo` / `fixture` path, or in a `.pem` / `.key` / `.crt`
+  file, is recorded as **review-only** and does **not** drive the verdict.
+  That is where test certificates and tutorial keys live, and calling those
+  a leak is the exact failure to avoid. Generic assignments are ignored
+  entirely in those paths; only provider-shaped matches are even recorded.
+
+### The three verdicts
+
+**HIT** - at least one finding in a **normal source path** (not test / doc /
+fixture) survived every filter.
+
+**CLEAN** - text was scanned and nothing survived in a normal path. The
+report still lists any review-only matches from test/doc/fixture paths.
+
+**UNKNOWN** - no readable text file was found to search at all (everything
+binary or undecodable). "Could not look" is not "looked and found nothing".
+
+### Undecidable, spelled out
+
+- **no readable text** (`files_scanned == 0`) -> UNKNOWN.
+- **some files unreadable** -> counted in `files_unreadable` and sampled in
+  the report, but if anything readable was scanned the verdict stands on
+  what was scanned.
+- **match only in a lower-trust path** -> `review_only`, verdict CLEAN.
+
+### Worked example - a real hit and a real non-hit
+
+`youtube-dl-1`, run 2026-09-08.
+
+**Hit:** `youtube_dl/extractor/shahid.py:41` -
+`'access_key': 'AKIAI6X4TYCIXM2B7MUQ'` - an AWS access key ID hardcoded in a
+normal source file. Plus 11 more (`_API_KEY`, `_APIKEY`, `_CONSUMER_SECRET`,
+`_AUTH_TOKEN` assignments, two hardcoded JWTs) across the extractor modules.
+youtube-dl embeds the target sites' own API keys on purpose; that does not
+change the claim, which is *"a credential-shaped string is at this line"*,
+verifiable by opening the file. Verdict **HIT**, 12 findings, all redacted in
+the report (first 4 and last 2 characters only).
+
+**Non-hit, same repo:** `test/testcert.pem` contains a
+`-----BEGIN PRIVATE KEY-----` block. It is a real private key by shape, but
+it sits in a `test` path and a `.pem` file - a test fixture. Recorded as
+**review-only**, does **not** make the verdict HIT.
+
+**Non-hits elsewhere:** `fastapi`'s `docs_src/security/tutorial004.py` pins
+`SECRET_KEY = "09d25e09…"` with a comment saying `# openssl rand -hex 32` -
+a tutorial example in a `docs_src` path, filtered. `tornado`'s
+`demos/twitter/twitterdemo.py` has `twitter_consumer_secret = 'qwer5678'`
+inside a docstring - keyboard-run placeholder, filtered.
+
+## Proving both checks can fail
+
+`python check_known_holes.py --self-test` and
+`python check_exposed_secrets.py --self-test`, both run before trusting the
+checks on real instances:
+
+**check 1**
+1. `security_selftest/vulnerable/` (`Jinja2==2.11.2`, `PyYAML==5.3`,
+   `urllib3==1.25.8`) -> must be **HIT** with named real advisories.
+2. `security_selftest/clean/` (current stable pins) -> must be **CLEAN**,
+   zero matches.
+3. `security_selftest/unpinned/` (`requests`, `flask>=2.0`, …) -> must be
+   **UNKNOWN**, never CLEAN.
+4. Forced offline lookup of an uncached package -> must raise, producing
+   **UNKNOWN**, never CLEAN.
+
+**check 2**
+1. Planted `AKIA…`, `ghp_…` and a private-key block in normal paths -> must
+   all be **HIT**.
+2. Planted `your-api-key-here`, `example_password`, `AKIAIOSFODNN7EXAMPLE`,
+   `ghp_0000…`, `AIzaSy…DUMMY…` -> must be **CLEAN**, zero false alarms.
+3. Planted real-shape private key in `tests/certs/server.key` -> must be
+   **review-only**, verdict not HIT.
+4. A directory with only an unreadable binary -> must be **UNKNOWN**, never
+   CLEAN.
+
+## Results
+
+**Control (before real instances):** the `security_selftest/clean/` fixture
+and the placeholder fixture both stay silent - the checks do not invent
+findings on clean input. Proved by the self-tests above, every branch.
+
+**Round 1 - 10 practice instances** (black-1, cookiecutter-1, fastapi-1,
+httpie-1, luigi-1, sanic-3, thefuck-1, tornado-1, tqdm-4, youtube-dl-1),
+2026-09-08:
+
+- check 1: **9 HIT, 1 UNKNOWN** (youtube-dl, no declared dependencies),
+  0 CLEAN. Every pinned old project has advisories - expected and correct.
+- check 2: **1 HIT** (youtube-dl - real embedded API keys in extractor
+  source), 9 CLEAN. First pass flagged 5; the extra 4 were test TLS certs
+  and a FastAPI docs tutorial key. Reconfigured: test/doc/fixture/`.pem`
+  paths are now review-only, generic assignments need a full 16+ char
+  high-entropy RHS. After that: 0 false alarms.
+
+**Round 2 - 10 fresh practice instances** (black-2, cookiecutter-2,
+fastapi-2, httpie-2, luigi-10, sanic-5, spacy-2, thefuck-2, tornado-2,
+tqdm-5), 2026-09-08: same shape - check 1 all HIT, check 2 all CLEAN (three
+with review-only test-cert matches). No further reconfiguration needed; the
+round-1 filters held on instances they had never seen.
+
+**Full practice batch:** see `reports/known-holes.md` and
+`reports/exposed-secrets.md`. `known-holes.md` is committed (it is a list of
+public CVEs against old pins - no answer material). `exposed-secrets.*` is
+git-ignored - it quotes real credential material where any exists.

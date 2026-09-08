@@ -1,0 +1,7 @@
+# Fixture for check_known_holes.py --self-test: dependencies are declared but
+# none pin an exact version, so no advisory lookup can be made. This must come
+# back UNKNOWN, never CLEAN - "we could not check" is not "we proved safe".
+requests
+flask>=2.0
+click~=8.1
+numpy!=1.24.0

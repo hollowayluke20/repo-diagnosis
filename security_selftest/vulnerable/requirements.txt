@@ -1,0 +1,7 @@
+# Fixture for check_known_holes.py --self-test.
+# These exact pins have well-known public advisories recorded against them.
+# If OSV ever stops returning advisories for ALL of these, the self-test
+# fails loudly - which is the point.
+Jinja2==2.11.2
+PyYAML==5.3
+urllib3==1.25.8

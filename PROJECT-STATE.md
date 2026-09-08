@@ -102,6 +102,18 @@ it was written.
 - **`check_still_runs.py`** — DONE. Compares each original-Python test baseline
   with a clean current-Python copy and rejects any newly worse suite. Proved by
   its `--self-test` (injects a syntax error and a missing dependency).
+- **Security check (Stage 6)** — DONE. Two separate checks, no AI:
+  `check_known_holes.py` (pinned deps looked up against the OSV advisory
+  database) and `check_exposed_secrets.py` (credential-shape pattern search
+  with placeholder/test-path filtering). Both have `--self-test` proving every
+  verdict branch including cry-wolf and database-unreachable. Ran round 1 (10
+  practice), round 2 (10 fresh), then the full practice batch (43): known-holes
+  32 HIT / 11 UNKNOWN / 0 CLEAN (2020 pins always have CVEs recorded by now;
+  UNKNOWN = no declared deps or unpinned manifest); exposed-secrets 6 HIT (all
+  youtube-dl, real API keys embedded in extractor source) / 37 CLEAN, zero
+  false alarms after the round-1 path-trust fix. Rules + worked examples in
+  SCORING.md PART 3. `reports/known-holes.md` committed;
+  `reports/exposed-secrets.*` git-ignored (quotes real secrets).
 - **`manifest.py`, `check_prompt_sync.py`, `progress_marker.py`** — DONE.
 
 ## What is half-built

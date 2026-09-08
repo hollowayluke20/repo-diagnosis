@@ -45,6 +45,15 @@ _fix_schema.json
 
 # Disposable current-Python copies made by check_still_runs.py.
 portability_scratch/
+
+# Security check (check_known_holes.py / check_exposed_secrets.py):
+# - the OSV lookup cache is just re-fetchable advisory data
+# - the exposed-secrets report quotes real credential material where any
+#   exists, so it never goes in git (known-holes.md is a list of public CVEs
+#   against old pins - no answer material - and IS tracked)
+security_cache/
+reports/exposed-secrets.md
+reports/exposed-secrets.json
 # Per-instance portability errors can reveal the catalogue test names.
 reports/portability.md
 reports/portability_detail.json
