@@ -516,7 +516,7 @@ is pleasant, which is taste with no test behind it.
 never *proven*. Metrics that score how tangled code is are guesses about
 quality, not measures of it — a number can improve while the code gets worse.
 
-Done when: each of the four reports improvements with evidence attached, and
+Done when: each of the six reports improvements with evidence attached, and
 anything unprovable appears only in the proposed section.
 
 ## Stage 17: Private repositories
