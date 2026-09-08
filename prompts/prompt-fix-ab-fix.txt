@@ -1,0 +1,40 @@
+Work in C:\Users\hollo\dev\repo-diagnosis. Don't touch the corpus or the
+library entries themselves.
+
+ab_fix.py was run and both sides (library ON and library OFF) crashed
+identically before either attempted a fix - the codex executable was not
+found in that run's environment. The script then printed "no difference
+between ON and OFF" - that is wrong. Two identical crashes are not the same
+as two identical real results, and the script needs to be able to tell those
+apart.
+
+Two things to do:
+
+1. Fix ab_fix.py so it clearly distinguishes:
+   - BOTH SIDES CRASHED BEFORE ATTEMPTING A FIX (inconclusive - say so loudly,
+     never print a conclusion about the library from this)
+   - BOTH SIDES RAN AND PRODUCED THE SAME OUTCOME (a real tie - worth
+     reporting)
+   - The two must never look the same in the output.
+
+2. Make sure this run of ab_fix.py can actually FIND the codex executable.
+   The main repo folder already has a working setup other sessions used
+   successfully tonight - check how run_diagnosis.py or fix_bug.py locate and
+   invoke codex, and use the same approach (they resolve it properly rather
+   than assuming it's on PATH). If ab_fix.py works from a disposable copy of
+   the repo (it should, to protect the real corpus/library), make sure that
+   copy is set up the same way those did - a fully self-contained
+   interpreter, not just "codex" on PATH.
+
+Then actually run it end to end on black-1 finding 2 again, and tell me
+honestly:
+  - did both sides genuinely run a coding agent this time
+  - did it pass or fail on each side
+  - if it credited a library entry as used, was that entry actually relevant
+    to the bug (you already judged the three candidates as a poor fit - check
+    whether that changed)
+
+If it still can't get a real result, say so plainly rather than printing
+anything that looks like a conclusion.
+
+Explain everything as if I'm new to coding - I started in June 2026.
